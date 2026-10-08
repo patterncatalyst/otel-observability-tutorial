@@ -57,27 +57,39 @@ RED describes the behavior of a service from the outside, in terms of the reques
 
 USE and RED are complementary rather than overlapping. A RED dashboard shows a latency spike; a USE dashboard, checked next, shows whether that spike coincides with CPU utilization pinned at capacity or a connection pool saturated with waiting callers. Neither method alone answers both "is the service failing its callers" and "why," which is why a complete dashboard set in this tutorial plans for both: one dashboard per service built around RED, and one dashboard per shared resource, the Kafka cluster, the Postgres instance, the Collector itself, built around USE.
 
-## The planned dashboard set
+## The shipped dashboard set
 
-With the provider in place and the two methods chosen as the organizing principle, the dashboards authored for this tutorial follow a small, limited set rather than one dashboard per team's personal preference:
+With the provider in place and the two methods chosen as the organizing principle, this tutorial ships seven dashboards as JSON under `stack/grafana/dashboards/`, all provisioned into the "OTel Tutorial" folder. The set is kept small, grouped by the question each one answers rather than by team preference:
 
-- **A service overview dashboard**, one per service in the e-commerce domain, built around RED: request rate, error rate, and latency percentiles (p50, p95, p99) for each service's primary entry points, with panels linked through the exemplars and trace-to-metrics correlation covered earlier so a latency spike is one click from a concrete trace.
-- **An infrastructure dashboard**, built around USE, covering the Collector's own resource consumption, the Kafka brokers, and the Postgres instance, since all three sit underneath every service and a resource constraint in any of them manifests as a RED-dashboard symptom in several services at once.
-- **A service graph dashboard**, drawing on Tempo's metrics-generator service graph mentioned in the correlation chapter, to show the topology of calls between services and let a RED-level problem in one service be traced to its upstream callers without reading trace data span by span.
+- **Service Overview (RED)** (`svc-overview-red`) — request rate, 5xx error ratio, and p50/p95/p99 latency per service, read from the HTTP server duration histogram. A `service` variable filters by job; the latency panel emits exemplars that jump to the trace behind a slow sample.
+- **Trace Explorer & Service Graph** (`trace-explorer-sg`) — Tempo's metrics-generator service graph as a node graph, plus p95 and call rate by operation from the span metrics, an error-status operation table, and a TraceQL list of recent traces that opens the waterfall on click.
+- **Logs & Correlation** (`logs-correlation`) — log volume by service and by `detected_level` from Loki, and a logs panel filtered by a `trace_id` variable where each line's `trace_id` links back to Tempo.
+- **Kafka Flow** (`kafka-flow`) — `order.placed` produce throughput from the `orders_placed_total` counter against consume throughput and handler latency for the shipping and notification consumers, with produced-versus-consumed totals across the async boundary.
+- **Postgres & Resource (USE)** (`postgres-resource-use`) — database query latency and rate per operation from the DB client span metrics, `appdb` server-side latency per caller from the service graph, and a CPU flame graph standing in for utilization.
+- **Profiles (Pyroscope)** (`profiles-pyroscope`) — per-service CPU flame graphs from the `process_cpu` profile, driven by a `service` variable, with the order service always in view.
+- **Signal Correlation Showcase** (`signal-correlation-showcase`) — one row per signal (trace, metric, log, profile) keyed to a single `trace_id`, the dashboard the correlation chapter points to.
 
 This is a small set by design. Dashboards accumulate the same way unused metrics do: easy to add, rarely removed, and each additional one is another screen someone has to know exists and remember to check. Starting from RED and USE, rather than from an open-ended list of "things that might be interesting," keeps the set small enough that a new engineer can learn all of it in one sitting.
 
+### One metric name, two instrumentation stacks
+
+The Python and Quarkus services emit the OpenTelemetry HTTP server histogram, `http_server_duration_milliseconds_*`, while the Spring Boot services emit Micrometer's `http_server_requests_milliseconds_*` with its own `status` label for the response code. The RED dashboard carries both: each rate, error, and latency panel runs the OpenTelemetry query as the primary series and the Micrometer query as a second, legend-tagged series. Only one language profile runs at a time, so the panels never double-count, and the same dashboard lights up whichever implementation is loaded. Grouping is by the `job` label, which both stacks populate with the service name, so the breakdown is identical across languages.
+
+### What the resource dashboard can and cannot show
+
+The USE dashboard reflects a real limit of the single-image stack. The `grafana/otel-lgtm` container ships no cAdvisor or node-exporter, so container cgroup CPU percentage, memory working set, and OOM counters are never scraped into Mimir. The only metrics present are the HTTP histograms, `orders_placed_total`, and the Tempo-generated span and service-graph series. The dashboard therefore reads database performance from span metrics and reads CPU utilization from Pyroscope's flame graph, with a note panel explaining where the cgroup metrics would come from once an exporter is added.
+
 ## Building a service dashboard
 
-A service dashboard built this way starts from the metric names the service already emits and the attribute conventions already standardized across it. For an HTTP service instrumented with the OpenTelemetry semantic conventions, the request duration histogram exposes rate, latency, and (via a status-code label) errors from a single metric series. The dashboard's first row is built from three panels drawing off that one histogram:
+The Service Overview (RED) dashboard starts from the metric names the services already emit and the attribute conventions standardized across them. For an HTTP service instrumented with the OpenTelemetry semantic conventions, the request duration histogram exposes rate, latency, and (via a status-code label) errors from a single metric series. Its first row is built from three panels drawing off that one histogram, grouped by the `job` label and filtered by the dashboard's `service` variable:
 
-- a rate panel: `sum(rate(http_server_duration_milliseconds_count{service_name="orders"}[5m]))`, graphed over time;
-- an error-rate panel: the same query filtered to error-status outcomes, usually expressed as a ratio against the total so the panel reads directly as a percentage rather than a raw count;
-- a latency panel: `histogram_quantile(0.95, sum(rate(http_server_duration_milliseconds_bucket{service_name="orders"}[5m])) by (le))`, with p50 and p99 added alongside p95 so a flat median next to a climbing tail is visible rather than hidden inside an average.
+- a rate panel: `sum by (job) (rate(http_server_duration_milliseconds_count{job=~"$service"}[$__rate_interval]))`, graphed over time;
+- an error-rate panel: the 5xx subset over the total, `http_status_code=~"5.."` divided by the unfiltered rate, so the panel reads directly as a ratio rather than a raw count;
+- a latency panel: `histogram_quantile(0.95, sum by (le, job) (rate(http_server_duration_milliseconds_bucket{job=~"$service"}[$__rate_interval])))`, with p50 and p99 added alongside p95 so a flat median next to a climbing tail is visible rather than hidden inside an average.
 
-Each of these panels, because they are Prometheus-backed histograms produced by a service emitting exemplars, automatically becomes a jump point into the trace behind a specific latency sample, following the exemplar correlation described earlier. A dashboard built this way is not a dead end when it shows a problem; it is the entry point to the trace, and from the trace to the logs and profile, that explains it.
+A fourth panel graphs the `orders_placed_total` custom counter by status, the one business-level signal the RED trio does not cover. Each histogram panel, because it is a Prometheus-backed histogram produced by a service emitting exemplars, becomes a jump point into the trace behind a specific latency sample, following the exemplar correlation described earlier. A dashboard built this way is not a dead end when it shows a problem; it is the entry point to the trace, and from the trace to the logs and profile, that explains it.
 
-Below the RED row, a service dashboard built for this tutorial adds panels for anything specific to that service's own failure modes, a Kafka consumer lag panel for a service that consumes events, a connection pool saturation panel for a service with a tight database pool, but the RED row comes first on every dashboard, in the same position, because consistency across dashboards is itself a feature: an engineer paged for an unfamiliar service should recognize the top of its dashboard immediately, even without having built it.
+Service-specific failure modes live on their own dashboards rather than crowding the overview: the Kafka Flow dashboard tracks the produce-and-consume balance for the event-driven services, and the Postgres & Resource dashboard tracks query latency for the database path. The RED row stays first and in the same position on the overview, because consistency across dashboards is itself a feature: an engineer paged for an unfamiliar service should recognize the top of its dashboard immediately, even without having built it.
 
 ## Managing dashboards without opening a browser
 
@@ -85,8 +97,8 @@ Grafana's dashboard JSON is detailed enough to resist hand-editing at any real s
 
 ```bash
 curl -s -H "Authorization: Bearer $GRAFANA_API_TOKEN" \
-  "http://localhost:3000/api/dashboards/uid/orders-overview" \
-  | jq '.dashboard' > stack/grafana/dashboards/orders-overview.json
+  "http://localhost:3000/api/dashboards/uid/svc-overview-red" \
+  | jq '.dashboard' > stack/grafana/dashboards/01-service-overview-red.json
 ```
 
 Piped through `jq`, the response is both pretty-printed for a readable diff and trimmed to the `dashboard` object itself, stripped of the wrapping metadata (`meta.created`, `meta.updatedBy`, and similar fields) that Grafana's API adds and that would otherwise make every export look modified even when no panel actually changed. This is the same principle as the provisioning provider itself: the browser is for iterating on a query live, with immediate visual feedback, but the artifact that gets committed is produced and inspected from the command line, where a reviewer can read exactly what changed between two versions of a dashboard without opening Grafana at all.
@@ -94,7 +106,7 @@ Piped through `jq`, the response is both pretty-printed for a readable diff and 
 The same API makes dashboards easy to validate before they ship. A malformed panel query does not fail loudly; it renders as a panel with a red error icon, easy to miss in a JSON file with forty panels and easy to catch with a one-line check that the file at least parses as valid JSON and contains the expected number of panels before it is dropped into the provisioned directory:
 
 ```bash
-jq -e '.panels | length > 0' stack/grafana/dashboards/orders-overview.json
+jq -e '.panels | length > 0' stack/grafana/dashboards/01-service-overview-red.json
 ```
 
 ## Why Grafana, and why only Grafana

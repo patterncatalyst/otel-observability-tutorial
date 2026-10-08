@@ -119,7 +119,7 @@ A trace-to-logs click, under the hood, is Loki's query API asked for everything 
 
 ```bash
 curl -s -G "http://localhost:3100/loki/api/v1/query_range" \
-  --data-urlencode 'query={service_name="orders"} | trace_id="a1b2c3d4e5f6"' \
+  --data-urlencode 'query={service_name="order-python"} | trace_id="0468dcf7123aadd8ff9074b65d76049e"' \
   --data-urlencode "start=$(date -d '-5 minutes' +%s)000000000" \
   --data-urlencode "end=$(date +%s)000000000"
 ```
@@ -127,6 +127,12 @@ curl -s -G "http://localhost:3100/loki/api/v1/query_range" \
 A trace-to-metrics click runs one of the two named PromQL queries from `tracesToMetrics` against Prometheus's query API directly, with `$$__tags` already substituted for the actual `service` label value pulled from the span. An exemplar click is nothing more than reading the `trace_id` field already embedded in the sample Prometheus returned when you queried the histogram and handing it to Tempo's `GET /api/traces/{traceID}` endpoint. None of these are privileged operations available only inside the Grafana process; they are the same public HTTP APIs any script could call, which is a useful fact when a correlation link appears broken: run the equivalent curl command directly against Loki, Prometheus, or Tempo, and see which half of the chain, the identifier being passed or the backend's query, is actually failing.
 
 This is also the fastest way to confirm a correlation link is configured correctly before trusting a demo to it live. If the curl command against Loki with a known-good `trace_id` returns log lines, but Grafana's click-through comes back empty, the bug is almost certainly in the `jsonData` mapping, a tag name that does not match, a time window that is too narrow, rather than in the underlying data.
+
+## The correlation dashboards
+
+Two of the provisioned dashboards put these links to work directly. The **Signal Correlation Showcase** (`signal-correlation-showcase`) lays out one row per signal, trace, metric, log, and profile, every panel keyed to a single `trace_id` dashboard variable. Paste one request's id into the variable and the trace waterfall, that request's log lines, the service's request rate and p95 with exemplars, and the service's CPU flame graph all resolve to the same investigation. It is the live version of Figure 16.1: one identifier, four signals, one pane. The **Logs & Correlation** dashboard (`logs-correlation`) is the companion, graphing log volume by service and by level and filtering the log stream by `trace_id`, with each line's id clickable through to Tempo via the derived field above.
+
+One detail the showcase dashboard handles quietly can trip anyone wiring this by hand. Tempo's search API returns trace IDs with leading zeros stripped, while Loki stores the full 32-character zero-padded `trace_id` as structured metadata. An exact-match filter on an id copied from a Tempo search would silently return nothing. The showcase log panel matches `0*$trace_id` instead, tolerating the missing leading zeros, so a trace id pasted from either place finds its log lines.
 
 ## What has to be true for any of this to work
 
