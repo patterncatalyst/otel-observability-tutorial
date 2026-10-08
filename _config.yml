@@ -82,5 +82,7 @@ exclude:
   - scripts/
   - .devcontainer/
   - demos/
+  - deck/
+  - presentations/
   - README.md
   - LICENSE
