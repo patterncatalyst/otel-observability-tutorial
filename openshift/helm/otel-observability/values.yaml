@@ -58,17 +58,35 @@ lgtm:
 # stack/compose.yaml runs locally. No PVC: the compose stack doesn't persist
 # profile data across restarts either, so this chart keeps that ephemeral
 # behavior rather than adding storage compose doesn't have.
+#
+# runAsUser is the UID the pyroscope image's own `pyroscope` account is built
+# with (10001). The image's metastore writes under /data, a directory that
+# account owns; restricted-v2's randomly assigned namespace UID cannot create
+# /data/v2 there, so the pod must run as its own UID. Because 10001 falls
+# outside the namespace's assigned range, requesting it forces admission onto
+# the `anyuid` SCC (see pyroscopeServiceAccountName below) — the same
+# mechanism lgtm uses, scoped to this one pod.
 pyroscope:
   image: "docker.io/grafana/pyroscope:2.3.2"
+  runAsUser: 10001
+
+# Pyroscope runs under its own ServiceAccount bound to `anyuid` so it can keep
+# the fixed UID its image's data directory is owned by (see pyroscope.runAsUser
+# above and templates/pyroscope-deployment.yaml). Scoped to this one pod, not
+# a namespace-wide grant — the same pattern as lgtmServiceAccountName.
+pyroscopeServiceAccountName: "otel-observability-pyroscope"
 
 # ServiceAccount for the infra StatefulSets (postgres, kafka). Their upstream
 # images require specific non-root UIDs (postgres 70, kafka 1000), which
 # OpenShift's default `restricted-v2` SCC will not allow — it assigns a
 # random UID from the namespace range instead. Binding this SA to
-# `nonroot-v2` lets those two pods keep their own UID. The six app pods and
-# Pyroscope need no such grant: the app images already run as `USER 1001:0`
-# (arbitrary UID, group 0), which is exactly what restricted-v2 expects, and
-# Pyroscope's upstream image is built the same arbitrary-UID-compatible way.
+# `nonroot-v2` lets those two pods keep their own UID. The six app pods need
+# no such grant: the app images already run as `USER 1001:0` (arbitrary UID,
+# group 0), which is exactly what restricted-v2 expects. Pyroscope is the
+# exception among the non-app pods — its image writes /data as a fixed UID
+# restricted-v2 won't allow, so it runs under its own anyuid-bound
+# ServiceAccount (see pyroscopeServiceAccountName below), the same way lgtm
+# does.
 infra:
   serviceAccountName: "otel-observability-infra"
   scc: "nonroot-v2"
