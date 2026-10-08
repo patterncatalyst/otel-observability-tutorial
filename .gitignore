@@ -20,6 +20,12 @@ uv.lock.tmp
 # sources — see proto/README.md ("generated code is a build artifact").
 services/python/*/src/shop/
 
+# ── Deck toolchain (deck/) ───────────────────────────────────────────────────
+# node_modules is reproduced by `npm install` against the pinned package.json;
+# the QA render output (deck/qa/) is a throwaway soffice artifact.
+deck/node_modules/
+deck/qa/
+
 # ── Editor / OS noise ────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db

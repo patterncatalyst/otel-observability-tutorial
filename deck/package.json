@@ -1,0 +1,12 @@
+{
+  "name": "otel-observability-tutorial-decks",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Shared Red Hat-branded deck scaffold for this tutorial's slide decks (101 overview + per-language 201 decks). Built programmatically with pptxgenjs via deck-helpers.js.",
+  "scripts": {
+    "build:101": "node deck-observability-otel-101.js"
+  },
+  "dependencies": {
+    "pptxgenjs": "4.0.1"
+  }
+}
