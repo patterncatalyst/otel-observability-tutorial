@@ -45,7 +45,7 @@ sdk install quarkus
 quarkus version
 ```
 
-The CLI is what later chapters reach for to add extensions (`quarkus ext add opentelemetry`) and to run a service in live-coding mode (`quarkus dev`) against Dev Services rather than the shared compose stack — covered below. Spring Boot has no equivalent CLI dependency in this tutorial; its services build and package through plain `mvn package`, with the OpenTelemetry Java agent and the Pyroscope agent copied into the build output by the `maven-dependency-plugin` configuration already present in each service's POM.
+The CLI is what later chapters reach for to add extensions (`quarkus ext add opentelemetry`) and to run a service in live-coding mode (`quarkus dev`) against Dev Services rather than the shared compose stack — covered below. Spring Boot has no equivalent CLI dependency in this tutorial; its services build and package through plain `mvn package`, with the [OpenTelemetry Java agent](https://opentelemetry.io/docs/zero-code/java/agent/) and the Pyroscope agent copied into the build output by the `maven-dependency-plugin` configuration already present in each service's POM.
 
 Both `pom.xml` files pin every dependency, BOM, and plugin to a specific supported release rather than a floating version — `spring-boot-starter-parent` at `4.1.1`, `quarkus-bom` at `3.33.4`, the `opentelemetry-javaagent` artifact at `2.32.0` for Spring Boot. That matters more for a tutorial than for most projects: a reader following along six months from now should get the exact same behavior this book describes, not whatever happened to be the newest patch release on the day they ran `mvn package`.
 

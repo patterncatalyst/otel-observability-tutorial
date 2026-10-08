@@ -60,7 +60,7 @@ def inject_headers(existing=None):
     return headers
 ```
 
-`propagate.inject` and `propagate.extract` here are the same global propagator configured in `obs/otel.py` — a `CompositePropagator` of `TraceContextTextMapPropagator` and `W3CBaggagePropagator` — so a single call handles both the trace context and any active baggage (including `cart.id`, from the previous chapter) in one pass, writing both into the same carrier dictionary that becomes Kafka headers. `_enabled()` reads `PROPAGATE_KAFKA_CONTEXT` directly, making this module the one place in the Python services where the toggle is checked, rather than scattering the check across every producer call site.
+`propagate.inject` and `propagate.extract` here are the same global propagator configured in `obs/otel.py` — a `CompositePropagator` of `TraceContextTextMapPropagator` and `W3CBaggagePropagator` — so a single call handles both the trace context and any active baggage (including `cart.id`, from Chapter 12) in one pass, writing both into the same carrier dictionary that becomes Kafka headers. Getting both into the same carrier matters: a trace that continues across the hop but loses its baggage, or vice versa, is a confusing partial failure, so routing them through one propagator call keeps them in lockstep. `_enabled()` reads `PROPAGATE_KAFKA_CONTEXT` directly, making this module the one place in the Python services where the toggle is checked, rather than scattering the check across every producer call site.
 
 The shipping worker's consume loop shows the other half: extract a `Context` from the message's headers, and pass it explicitly as the parent context when opening the processing span.
 
