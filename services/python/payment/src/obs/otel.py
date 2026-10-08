@@ -68,7 +68,13 @@ def setup(service_name: str) -> ObsConfig:
     opentelemetry-instrument launcher, just gets a harmless "provider already
     set" warning). Returns the resolved config for logging/diagnostics."""
     global _TRACER, _METER
-    cfg = ObsConfig(service_name=service_name)
+    # The zero-code `opentelemetry-instrument` launcher and the Collector key
+    # traces/metrics off OTEL_SERVICE_NAME (compose sets it to "<name>-python").
+    # Prefer it here too so the manually-wired log and profile signals carry the
+    # SAME service.name; otherwise logs land in Loki (and profiles in Pyroscope)
+    # under the bare name while traces/metrics use "<name>-python", silently
+    # breaking the trace<->log<->profile correlation in Grafana.
+    cfg = ObsConfig(service_name=os.getenv("OTEL_SERVICE_NAME") or service_name)
 
     # Baggage must ride alongside trace context on every hop (HTTP, gRPC) so
     # inventory/payment can read cart.id — tracecontext alone would drop it.
@@ -128,7 +134,7 @@ def setup(service_name: str) -> ObsConfig:
     # Fourth signal (optional): continuous profiling via Pyroscope. No-ops unless
     # PYROSCOPE_ADDRESS is set and the pyroscope SDK is installed. See obs.profiling.
     from . import profiling
-    profiling.setup_profiling(service_name)
+    profiling.setup_profiling(cfg.service_name)
     return cfg
 
 
