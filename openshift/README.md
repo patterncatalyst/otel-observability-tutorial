@@ -121,9 +121,11 @@ helm lint openshift/helm/otel-observability
 helm template otel-observability openshift/helm/otel-observability --namespace otel-observability
 ```
 
-Both were run as part of authoring this chart (see the chapter's
-verification-status note) — this chart has **not** been applied to a live
-CRC cluster as part of this change.
+Both run clean. The chart has also been deployed to a live CRC cluster
+(CRC v2.64.0, OpenShift 4.22.14): every pod reached `Running` and all five
+signals were observed in the cluster's Grafana — see the chapter's
+verification-status note for the per-signal evidence and the Pyroscope
+`anyuid` finding.
 
 ## Uninstall
 
