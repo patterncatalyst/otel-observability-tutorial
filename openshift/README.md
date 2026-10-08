@@ -75,12 +75,17 @@ openshift/
 5. **One language track per install.** `stack/compose.yaml` scaffolds all
    three stacks (`spring`, `quarkus`, `python`) under compose profiles, any of
    which can run side by side locally. This chart's `values.yaml` has one
-   `language` switch — `python` by default, since its images are the ones
-   verified against a Containerfile-to-cluster path elsewhere in this
-   project — because a single OpenShift namespace deploying three copies of
-   the same six Services under the same names would collide; running more
-   than one track at once would mean installing the chart three times into
-   three namespaces, not a feature this chart adds.
+   `language` switch — `python` by default — because a single OpenShift
+   namespace deploying three copies of the same six Services under the same
+   names would collide; running more than one track at once would mean
+   installing the chart three times into three namespaces, not a feature this
+   chart adds. All three tracks have been deployed and verified one at a time
+   on a live CRC cluster via `helm upgrade --set language=`; the few settings
+   that differ across tracks (the per-language health-probe path — `/health`
+   for python, `/actuator/health` for spring and quarkus — the writable log
+   mount the JVM images need, and the Postgres credential) are carried in
+   `values.yaml` so the switch is all that changes. See
+   [`_docs/25-appendix-openshift-crc.md`](../_docs/25-appendix-openshift-crc.md).
 
 Everything else — the shared env contract (`OTEL_EXPORTER_OTLP_ENDPOINT`,
 `DATABASE_URL`, `KAFKA_BOOTSTRAP`, `PROPAGATE_KAFKA_CONTEXT`,
@@ -121,9 +126,11 @@ helm lint openshift/helm/otel-observability
 helm template otel-observability openshift/helm/otel-observability --namespace otel-observability
 ```
 
-Both were run as part of authoring this chart (see the chapter's
-verification-status note) — this chart has **not** been applied to a live
-CRC cluster as part of this change.
+Both run clean. The chart has also been deployed to a live CRC cluster
+(CRC v2.64.0, OpenShift 4.22.14): every pod reached `Running` and all five
+signals were observed in the cluster's Grafana — see the chapter's
+verification-status note for the per-signal evidence and the Pyroscope
+`anyuid` finding.
 
 ## Uninstall
 

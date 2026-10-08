@@ -4,14 +4,15 @@
 # stack/compose.yaml's comment on this service), so profile storage here is
 # the container's own ephemeral filesystem, consistent with that.
 #
-# No fixed runAsUser: Grafana's upstream images, including this one, are
-# built to run under an arbitrary assigned UID with group 0 writable data
-# dirs — the same restricted-v2-compatible convention the six app images use
-# (see services/<lang>/<domain>/Containerfile). This has NOT been exercised
-# against a live cluster as part of this appendix (see the chapter's
-# verification-status note) — if it turns out Pyroscope's image needs a
-# fixed UID the way otel-lgtm does, bind it to the `anyuid` SCC the same way
-# lgtm-deployment.yaml does.
+# Pyroscope's image runs as its own `pyroscope` account (UID 10001) and writes
+# its metastore under /data, a directory that UID owns. Under restricted-v2's
+# randomly assigned namespace UID the pod cannot create /data/v2 and crashloops
+# on "mkdir ./data/v2: permission denied" — confirmed on a live CRC cluster.
+# The fix is the one lgtm-deployment.yaml already uses: a dedicated
+# ServiceAccount bound to the `anyuid` SCC (templates/serviceaccount-infra.yaml)
+# plus an explicit runAsUser, which both lets the pod keep UID 10001 and — since
+# that UID is outside the namespace range — forces admission onto anyuid rather
+# than restricted-v2.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -30,6 +31,9 @@ spec:
         app.kubernetes.io/name: pyroscope
         {{- include "otel-observability.labels" . | nindent 8 }}
     spec:
+      # See templates/serviceaccount-infra.yaml: this SA is granted anyuid so
+      # the pod can keep its image's own UID and write /data.
+      serviceAccountName: {{ .Values.pyroscopeServiceAccountName }}
       containers:
         - name: pyroscope
           image: {{ .Values.pyroscope.image | quote }}
@@ -59,9 +63,8 @@ spec:
             requests: { cpu: 100m, memory: 256Mi }
             limits: { cpu: 500m, memory: 512Mi }
           securityContext:
-            runAsNonRoot: true
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop: ["ALL"]
-            seccompProfile:
-              type: RuntimeDefault
+            # Request the image's own UID. Do NOT add seccompProfile or
+            # capabilities here: anyuid permits neither, and setting them makes
+            # admission prefer restricted-v2 again, which reintroduces the
+            # /data permission failure. Same constraint as lgtm-deployment.yaml.
+            runAsUser: {{ .Values.pyroscope.runAsUser }}
