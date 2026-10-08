@@ -1,0 +1,30 @@
+[project]
+name = "inventory"
+version = "0.1.0"
+description = "Inventory service - async gRPC server for the OTel tutorial's Python implementation."
+requires-python = ">=3.14"
+dependencies = [
+    "grpcio==1.84.0",
+    "protobuf==7.36.2",
+    "asyncpg==0.32.0",
+    # Unused directly by this service, but required to import the vendored
+    # `obs` package, which (identically across all six services) eagerly
+    # imports obs.kafka.
+    "aiokafka==0.14.0",
+    "opentelemetry-api==1.45.1",
+    "opentelemetry-sdk==1.45.1",
+    "opentelemetry-exporter-otlp-proto-http==1.45.1",
+    "opentelemetry-distro==0.66b1",
+    "opentelemetry-instrumentation-grpc==0.66b1",
+    "opentelemetry-instrumentation-asyncpg==0.66b1",
+    "opentelemetry-instrumentation-logging==0.66b1",
+    "pyroscope-io==1.2.5",
+]
+
+[dependency-groups]
+dev = [
+    "grpcio-tools==1.84.0",
+]
+
+[tool.uv]
+package = false
