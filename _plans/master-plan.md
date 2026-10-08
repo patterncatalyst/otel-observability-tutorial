@@ -110,5 +110,5 @@ Signal-correlation showcase.
 - [DONE] Phase 3c — 10 tabbed chapters (04,07,08-14,17) with real 3-language codetabs, diagrams, validated
 - [DONE] Phase 4 — 4 decks (101 + Spring/Quarkus/Python 201), validated (repair round: removed fabricated Python code, voice swept)
 - [DONE] Phase 5 — 7 provisioned Grafana dashboards (verified live) + CRC appendix ch25 + openshift/ Helm chart (lint-clean, not cluster-verified)
-- [ ] Phase 6 — sunset/migration (gated)
+- [DONE] Phase 6 — sunset/migration: spring-boot-otel-observability-demos + quarkus-observability flipped to PRIVATE (kept); observability-python-otel-lgtm kept public + README points to this tutorial; both it and otel-observability-tutorial added to the hub grid. PROJECT COMPLETE.
 - Side workstream: create lgtm-python + lgtm-spring-boot skills (before Phase 3)
