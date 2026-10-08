@@ -1,0 +1,66 @@
+# lgtm-professional-voice scan patterns.
+#
+# Columns (TAB-separated): tier  case  label  regex  [only]
+#   tier   ban   = rewrite by default; keep only with a stated reason
+#          watch = triage each hit; many are legitimate in context
+#   case   i = case-insensitive, c = case-sensitive
+#   only   optional: comma-separated extensions the pattern applies to
+#          (e.g. md,markdown). Omit to scan every file type.
+#   regex  GNU grep -E (ERE). No backreferences: scan.sh wraps each regex in
+#          an extra group when excerpting long lines, which shifts numbering.
+#
+# Rewrites for every pattern: ../references/phrase-list.md
+# Project-specific jargon goes in a separate file passed with --patterns.
+
+# --- Confessional register (the work or the reader framed as honest/dishonest)
+ban	i	honest / honestly / honesty	\bhonest(ly|y)?\b
+ban	i	frankly / candidly / admittedly	\b(frankly|candidly|admittedly)\b
+ban	i	plainly / stated plainly	\bplainly\b
+ban	i	let's be clear / to be clear	\b(let['’]?s be|to be) (clear|honest|frank|precise|explicit|fair)\b
+ban	i	the truth is / truth be told	\b(the (truth|reality) is|truth be told|in all honesty)\b
+ban	i	not hidden / nothing hidden	\b(not|nothing) (is )?hidden\b
+ban	i	on purpose / for free	\b(on purpose|for free)\b
+watch	i	lie / lies / lying (person vs machine)	\b(lie|lies|lying|liar|liars)\b
+
+# --- Defensive contrast (arguing against a doubt the reader never raised)
+ban	i	genuine / genuinely	\bgenuine(ly)?\b
+ban	i	deliberately / intentionally	\b(deliberately|intentionally)\b
+ban	i	not a toy / not a stub	\bnot (just |merely |simply )?(a |an )?(toy|mock|mockup|stub|sketch|slideware|hello[- ]world|snippet)\b
+ban	i	real, running / for real	\breal(,| and) (running|working|live)\b|\b(genuinely|actually|truly) real\b|\bfor real\b
+watch	c	ALL-CAPS emphasis	\b(NOT|IS|ARE|NEVER|ALWAYS|ONLY|SAME|AFTER|BEFORE|EVERY|DOES|BOTH)\b
+watch	i	isn't X — it's Y	n['’]?t (just |merely |only |simply )?[^.;:]{1,40} [—–]+ ?(it|they|this|that)(['’]s|['’]re| is| are)\b
+
+# --- Meta-narration (the text describing itself instead of the subject)
+ban	i	worth noticing / worth stating	\bworth (notic|noting|stat|spell|tak|hold|call|paus|seeing|emphasi|repeat|flag|dwell|point|mention|underlin|highlight)[a-z]*\b
+ban	i	the thing to land / the takeaway	\bthe (thing|point|idea|takeaway|key point|key thing|lesson) (to|you should|worth) (land|notice|take away|remember|hold onto|internali[sz]e)\b
+ban	i	the rest of this deck/book	\b(the )?rest of (this|the) (deck|book|tutorial|chapter|site|workshop|talk|presentation)\b
+ban	i	uses ... by name	\b(uses|use|used|refers to|cites|catalogued|catalogs|names) [a-z ]{0,25}by name\b
+watch	i	this section/slide covers	\b(this|the next|the previous) (section|slide|chapter|part|deck|module) (is about|covers|walks|will|shows|explains|goes|turns|takes|looks)\b
+watch	i	note that / keep in mind	\b(note that|notice (that|how)|keep in mind|remember that|it['’]?s (important|worth) (to )?(note|noting|remember|mention)|as (we|you) (saw|will see|can see))\b
+watch	i	let's dive / let's walk	\blet['’]?s (dive|unpack|walk|take|look|explore|start|begin|see|break|zoom)\b
+
+# --- School / condescending framing
+ban	i	capstone / homework / students	\b(capstone|homework|pop quiz|lesson plan|students?|classroom)\b([^-./_]|$)
+watch	i	simply / obviously / easy	\b(simply|obviously|of course|trivially|easy|easily|don['’]?t worry|no worries|painless(ly)?|magical(ly)?|like magic|as if by magic)\b
+
+# --- AI-generated tells and hype
+ban	i	load-bearing	\bload[- ]bearing\b
+ban	i	earns its place / keep	\bearns? its (place|keep|complexity)\b
+ban	i	hype vocabulary	\b(delve[sd]?|delving|tapestry|game[- ]chang[a-z]*|supercharg[a-z]*|revolutioni[sz][a-z]*|cutting[- ]edge|best[- ]in[- ]class|world[- ]class|blazing(ly)?)\b
+watch	i	soft hype	\b(seamless(ly)?|unlock(s|ing)?|elevate[sd]?|empower[a-z]*|robust|powerful|leverag(e|es|ed|ing)|journey|landscape|in the realm of)\b
+watch	i	quietly / silently	\b(quietly|silently)\b
+watch	i	actually	\bactually\b
+watch	i	intensifiers	\b(very|really|truly|incredibly|extremely|crucially|notably|importantly)\b
+watch	i	em-dash pileup (3+ per line)	—[^—]*—[^—]*—
+watch	i	exclamation in prose	[a-z)]!( |"|'|$)
+
+# --- Wordiness and hedging
+ban	i	in order to / the fact that	\b(in order to|the fact that|at the end of the day|it should be noted|due to the fact|for all intents and purposes)\b
+watch	i	hedging	\b(arguably|perhaps|somewhat|fairly|essentially|basically|in a sense|sort of|kind of)\b
+
+# --- Titles and environment leakage
+watch	i	filename as title	\b(title|eyebrow|sub|subtitle|heading)[ ]*:[ ]*["'`][^"'`]*\b[a-z0-9_.-]+\.(sh|py|js|ts|java|ya?ml|json|xml)\b
+watch	i	filename as heading	^#{1,4} [a-z0-9_-]+\.(sh|py|java|ya?ml)\b	md,markdown
+watch	i	parallel-number title	\b(two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|[0-9]+) [a-z][a-z-]{2,}, (two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|[0-9]+) [a-z][a-z-]{2,}\b
+watch	i	environment-specific noun	\b(minikube|k3d|k3s|microk8s|laptop|my machine)\b
+watch	c	tracking code / plan path	\b(DRQ|DEF|DEC|CAP|FND|ADR|REQ|RISK|TASK|STEP)-[0-9]{1,4}\b|\bPhase [A-H]\b|_plans/|\bbuild-plan\b|\bthe (roadmap|PRD)\b

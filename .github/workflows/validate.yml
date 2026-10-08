@@ -1,0 +1,33 @@
+# Content and quality gate: validate front matter, codetabs, diagrams, shell
+# syntax, and professional-voice conventions on every push and PR. Separate
+# from pages.yml, which builds and deploys the site.
+
+name: Validate content
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v5
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+
+      - name: Build with Jekyll
+        run: bundle exec jekyll build
+
+      - name: Run front-matter / codetab / diagram validators
+        run: python3 -I scripts/validate.py
+
+      - name: Run professional-voice gate (ban tier)
+        run: bash scripts/voice/scan.sh --tier ban --fail _docs _parts
