@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 460" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#cc0000"/></marker></defs>
+<rect x="20" y="20" width="860" height="190" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="32" y="40" font-size="12" font-weight="700" fill="#1d1d1d">PROPAGATE_KAFKA_CONTEXT=true — trace continues</text>
+<rect x="20" y="240" width="860" height="190" rx="12" fill="#fdecec" stroke="#ddd"/>
+<text x="32" y="260" font-size="12" font-weight="700" fill="#1d1d1d">PROPAGATE_KAFKA_CONTEXT=false — trace breaks</text>
+<rect x="45" y="80" width="180" height="80" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="135.0" y="110.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Order producer</text>
+<text x="135.0" y="127.5" font-size="11.5" fill="#555555" text-anchor="middle">inject traceparent</text>
+<text x="135.0" y="142.5" font-size="11.5" fill="#555555" text-anchor="middle">+ baggage into headers</text>
+<rect x="280" y="80" width="150" height="80" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="355.0" y="118.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">order.placed</text>
+<text x="355.0" y="135.0" font-size="11.5" fill="#555555" text-anchor="middle">Kafka topic</text>
+<rect x="500" y="80" width="190" height="80" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="595.0" y="110.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Shipping / Notification</text>
+<text x="595.0" y="127.5" font-size="11.5" fill="#555555" text-anchor="middle">extract headers</text>
+<text x="595.0" y="142.5" font-size="11.5" fill="#555555" text-anchor="middle">continue as child span</text>
+<rect x="740" y="80" width="130" height="80" rx="9" fill="#fdecec" stroke="#ee0000" stroke-width="2"/>
+<text x="805.0" y="118.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">One trace</text>
+<text x="805.0" y="135.0" font-size="11.5" fill="#555555" text-anchor="middle">order -&gt; ship -&gt; notify</text>
+<rect x="45" y="300" width="180" height="80" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="135.0" y="330.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Order producer</text>
+<text x="135.0" y="347.5" font-size="11.5" fill="#555555" text-anchor="middle">tracing-enabled=false</text>
+<text x="135.0" y="362.5" font-size="11.5" fill="#555555" text-anchor="middle">no headers injected</text>
+<rect x="280" y="300" width="150" height="80" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="355.0" y="338.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">order.placed</text>
+<text x="355.0" y="355.0" font-size="11.5" fill="#555555" text-anchor="middle">no trace context</text>
+<rect x="500" y="300" width="190" height="80" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="595.0" y="330.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Shipping / Notification</text>
+<text x="595.0" y="347.5" font-size="11.5" fill="#555555" text-anchor="middle">nothing to extract</text>
+<text x="595.0" y="362.5" font-size="11.5" fill="#555555" text-anchor="middle">starts a new root span</text>
+<rect x="740" y="300" width="130" height="80" rx="9" fill="#fdecec" stroke="#ee0000" stroke-width="2"/>
+<text x="805.0" y="338.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Two traces</text>
+<text x="805.0" y="355.0" font-size="11.5" fill="#555555" text-anchor="middle">disconnected root</text>
+<path d="M225,120 L280,120" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="258.5" y="114.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">headers</text>
+<text x="258.5" y="114.0" font-size="11" fill="#555" text-anchor="middle">headers</text>
+<path d="M430,120 L500,120" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="471.0" y="114.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">same trace_id</text>
+<text x="471.0" y="114.0" font-size="11" fill="#b8650a" text-anchor="middle">same trace_id</text>
+<path d="M690,120 L740,120" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M225,340 L280,340" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="258.5" y="334.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">no headers</text>
+<text x="258.5" y="334.0" font-size="11" fill="#555" text-anchor="middle">no headers</text>
+<path d="M430,340 L500,340" fill="none" stroke="#b8650a" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#am)"/>
+<text x="471.0" y="334.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">no context</text>
+<text x="471.0" y="334.0" font-size="11" fill="#b8650a" text-anchor="middle">no context</text>
+<path d="M690,340 L740,340" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+</svg>

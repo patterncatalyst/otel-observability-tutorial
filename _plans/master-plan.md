@@ -107,6 +107,6 @@ Signal-correlation showcase.
   provisioning; devcontainer; validators + vendored voice CI gate. NOT pushed yet.
 - [DONE] Phase 2 — 15 agnostic chapters (Parts 0,1,3,4) authored, diagrams, Opus-validated PASS, deployed
 - [DONE] Phase 3a Spring + 3b Quarkus/Python service sets — all 5 signals verified live for all 3 languages (local-only, not pushed)
-- [ ] Phase 3c — tabbed signal chapters (04,07,08-14,17)
+- [DONE] Phase 3c — 10 tabbed chapters (04,07,08-14,17) with real 3-language codetabs, diagrams, validated
 - [ ] Phase 4 — decks ; Phase 5 — dashboards ; Phase 6 — sunset/migration (gated)
 - Side workstream: create lgtm-python + lgtm-spring-boot skills (before Phase 3)

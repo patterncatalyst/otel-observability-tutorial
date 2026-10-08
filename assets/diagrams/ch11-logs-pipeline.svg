@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 440" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#cc0000"/></marker></defs>
+<rect x="30" y="40" width="210" height="80" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="135.0" y="70.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Spring Boot</text>
+<text x="135.0" y="87.5" font-size="11.5" fill="#555555" text-anchor="middle">logback MDC</text>
+<text x="135.0" y="102.5" font-size="11.5" fill="#555555" text-anchor="middle">javaagent OTLP log appender</text>
+<rect x="30" y="160" width="210" height="80" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="135.0" y="190.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Quarkus</text>
+<text x="135.0" y="207.5" font-size="11.5" fill="#555555" text-anchor="middle">OTel log bridge</text>
+<text x="135.0" y="222.5" font-size="11.5" fill="#555555" text-anchor="middle">quarkus.otel.logs.enabled=true</text>
+<rect x="30" y="280" width="210" height="80" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="135.0" y="310.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Python</text>
+<text x="135.0" y="327.5" font-size="11.5" fill="#555555" text-anchor="middle">JSON logs + LoggingHandler</text>
+<text x="135.0" y="342.5" font-size="11.5" fill="#555555" text-anchor="middle">distro log correlation</text>
+<rect x="360" y="160" width="190" height="80" rx="9" fill="#fdecec" stroke="#ee0000" stroke-width="2"/>
+<text x="455.0" y="190.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">OTel Collector</text>
+<text x="455.0" y="207.5" font-size="11.5" fill="#555555" text-anchor="middle">logs pipeline</text>
+<text x="455.0" y="222.5" font-size="11.5" fill="#555555" text-anchor="middle">batch + resource processors</text>
+<rect x="660" y="160" width="200" height="80" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="760.0" y="190.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Loki</text>
+<text x="760.0" y="207.5" font-size="11.5" fill="#555555" text-anchor="middle">trace_id as structured metadata</text>
+<text x="760.0" y="222.5" font-size="11.5" fill="#555555" text-anchor="middle">service_name label</text>
+<rect x="360" y="320" width="320" height="100" rx="9" fill="#fdecec" stroke="#ee0000" stroke-width="2"/>
+<text x="520.0" y="353.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">One service.name or correlation breaks</text>
+<text x="520.0" y="370.0" font-size="11.5" fill="#555555" text-anchor="middle">bug: logs/profiles used bare &quot;order&quot;</text>
+<text x="520.0" y="385.0" font-size="11.5" fill="#555555" text-anchor="middle">traces/metrics used &quot;order-python&quot;</text>
+<text x="520.0" y="400.0" font-size="11.5" fill="#555555" text-anchor="middle">fix: resolve OTEL_SERVICE_NAME first</text>
+<path d="M240,80 L360,175" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="306.0" y="121.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">OTLP/HTTP :4318/v1/logs</text>
+<text x="306.0" y="121.5" font-size="11" fill="#555" text-anchor="middle">OTLP/HTTP :4318/v1/logs</text>
+<path d="M240,200 L360,200" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M240,320 L360,215" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M550,200 L660,200" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="611.0" y="194.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">export</text>
+<text x="611.0" y="194.0" font-size="11" fill="#555" text-anchor="middle">export</text>
+<path d="M135,360 L135,340" fill="none" stroke="#b8650a" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#am)"/>
+<path d="M360,355 L135,360" fill="none" stroke="#b8650a" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#am)"/>
+<text x="253.5" y="351.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">same resource.service.name</text>
+<text x="253.5" y="351.5" font-size="11" fill="#b8650a" text-anchor="middle">same resource.service.name</text>
+<text x="30" y="22" font-size="13" fill="#1d1d1d" text-anchor="start" font-weight="700">Every signal stamps the active trace context on the way out</text>
+</svg>

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 500" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#cc0000"/></marker></defs>
+<rect x="30" y="40" width="300" height="80" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="180.0" y="70.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Spring Boot</text>
+<text x="180.0" y="87.5" font-size="11.5" fill="#555555" text-anchor="middle">Micrometer MeterRegistry</text>
+<text x="180.0" y="102.5" font-size="11.5" fill="#555555" text-anchor="middle">javaagent bridge</text>
+<rect x="370" y="40" width="300" height="80" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="520.0" y="70.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Quarkus</text>
+<text x="520.0" y="87.5" font-size="11.5" fill="#555555" text-anchor="middle">Micrometer MeterRegistry</text>
+<text x="520.0" y="102.5" font-size="11.5" fill="#555555" text-anchor="middle">build-time bridge</text>
+<rect x="710" y="40" width="300" height="80" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="860.0" y="70.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Python</text>
+<text x="860.0" y="87.5" font-size="11.5" fill="#555555" text-anchor="middle">OTel Metrics API</text>
+<text x="860.0" y="102.5" font-size="11.5" fill="#555555" text-anchor="middle">otel.meter() directly</text>
+<rect x="230" y="180" width="580" height="90" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="520.0" y="223.0" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">orders_placed_total (counter)</text>
+<text x="520.0" y="240.0" font-size="11.5" fill="#dddddd" text-anchor="middle">orders.fulfillment.duration (histogram, exemplars attached)</text>
+<rect x="80" y="340" width="380" height="60" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="270.0" y="368.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">OTLP /v1/metrics → Mimir</text>
+<text x="270.0" y="385.0" font-size="11.5" fill="#555555" text-anchor="middle">Prometheus-compatible query</text>
+<rect x="580" y="340" width="380" height="60" rx="9" fill="#fdecec" stroke="#ee0000" stroke-width="2"/>
+<text x="770.0" y="368.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">exemplar trace_id → Tempo</text>
+<text x="770.0" y="385.0" font-size="11.5" fill="#555555" text-anchor="middle">click a histogram bucket in Grafana</text>
+<path d="M180,120 L400,180" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M520,120 L520,180" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M860,120 L640,180" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M400,270 L270,340" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M600,270 L770,340" fill="none" stroke="#b8650a" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#am)"/>
+<text x="691.0" y="299.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">exemplar</text>
+<text x="691.0" y="299.0" font-size="11" fill="#b8650a" text-anchor="middle">exemplar</text>
+<text x="520" y="25" font-size="14" fill="#b8650a" text-anchor="middle" font-weight="700">One counter and one histogram, two bridge mechanisms, one exemplar link</text>
+</svg>
