@@ -109,7 +109,7 @@ The practical effect: open a trace, find the span that took an unreasonable amou
 
 ## Two related but distinct features
 
-Two more entries in the Tempo datasource's configuration look similar to the correlation links above but serve a different purpose: `serviceMap` and `nodeGraph`. These do not link one trace to another signal. Instead, Tempo's metrics-generator derives a topology graph from the spans flowing through it, aggregating which services call which other services and at what error rate and latency, and Grafana renders that aggregate as a node graph. It is a complementary view, closer to the service-graph dashboard described in the next chapter than to point-to-point correlation, and it rides on the same `jsonData` block and the same underlying trace data, with no additional instrumentation required.
+Two more entries in the Tempo datasource's configuration look similar to the correlation links above but serve a different purpose: `serviceMap` and `nodeGraph`. These do not link one trace to another signal. Instead, Tempo's metrics-generator derives a topology graph from the spans flowing through it, aggregating which services call which other services and at what error rate and latency, and Grafana renders that aggregate as a node graph. It is a complementary view, closer to the service-graph dashboard covered in Chapter 22 than to point-to-point correlation, and it rides on the same `jsonData` block and the same underlying trace data, with no additional instrumentation required.
 
 ## What the click-through is actually doing
 
