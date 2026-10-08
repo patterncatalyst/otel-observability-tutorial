@@ -1,0 +1,27 @@
+# stack/grafana/dashboards.yaml
+#
+# Dashboard provisioning provider for the LGTM stack's bundled Grafana.
+#
+# Mount this at /otel-lgtm/grafana/conf/provisioning/dashboards/dashboards.yaml
+# and mount stack/grafana/dashboards/ at /otel-lgtm/grafana/dashboards (see
+# stack/compose.yaml). Any .json dashboard dropped into stack/grafana/dashboards/
+# is picked up automatically on the next updateIntervalSeconds tick — no UI
+# import step.
+#
+# The dashboards themselves are authored in Phase 5 (the Dashboards chapter);
+# this provider and the empty directory are the infrastructure that makes
+# "drop a JSON file in, see it in Grafana" work from day one.
+
+apiVersion: 1
+
+providers:
+  - name: tutorial-dashboards
+    orgId: 1
+    folder: "OTel Tutorial"
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /otel-lgtm/grafana/dashboards
+      foldersFromFilesStructure: false

@@ -1,0 +1,120 @@
+# stack/grafana/datasources.yaml
+#
+# Pre-provisioned Grafana datasources for the LGTM + Pyroscope stack.
+#
+# Mount this at /otel-lgtm/grafana/conf/provisioning/datasources/datasources.yaml
+# inside the lgtm container (stack/compose.yaml already does this).
+#
+# What this gives you:
+#   - All four signal datasources connected on startup (no manual setup)
+#   - Trace-to-logs correlation: clicking a trace in Tempo navigates to
+#     the matching Loki logs via trace_id
+#   - Logs-to-trace correlation: clicking a trace_id in a log line opens
+#     the trace in Tempo
+#   - Trace-to-profiles correlation: clicking a trace in Tempo can jump to
+#     the matching Pyroscope flamegraph for that service and time range
+#   - Exemplars: latency histograms link from metric to trace
+#
+# This file is what makes the "one trace_id flowing through traces, logs,
+# metrics, and profiles" demo work. Without it, the datasources exist but
+# the cross-signal links don't.
+
+apiVersion: 1
+
+datasources:
+  # ─── Tempo (traces) ─────────────────────────────────────────────────────
+  - name: Tempo
+    type: tempo
+    access: proxy
+    url: http://localhost:3200
+    uid: tempo
+    isDefault: false
+    editable: true
+    jsonData:
+      # Trace → Logs link: when viewing a trace, this navigates to the
+      # Loki query that finds logs containing the trace_id.
+      tracesToLogsV2:
+        datasourceUid: loki
+        spanStartTimeShift: -5m   # Search 5 min before span start
+        spanEndTimeShift: 5m      # Search 5 min after span end
+        tags:
+          - key: service.name
+            value: service_name
+        filterByTraceID: true
+        filterBySpanID: false
+      # Trace → Metrics link: query metrics from the same time window.
+      tracesToMetrics:
+        datasourceUid: prometheus
+        spanStartTimeShift: -2m
+        spanEndTimeShift: 2m
+        tags:
+          - key: service.name
+            value: service
+        queries:
+          - name: 'Request rate'
+            query: 'sum(rate(http_server_duration_milliseconds_count{$$__tags}[5m]))'
+          - name: 'Error rate'
+            query: 'sum(rate(http_server_duration_milliseconds_count{$$__tags,error="true"}[5m]))'
+      # Trace → Profiles link: jump from a span to the matching flamegraph
+      # for that service over the span's time range.
+      tracesToProfiles:
+        datasourceUid: pyroscope
+        tags:
+          - key: service.name
+            value: service_name
+        profileTypeId: 'process_cpu:cpu:nanoseconds:cpu:nanoseconds'
+      # Service map (requires metrics generator in Tempo)
+      serviceMap:
+        datasourceUid: prometheus
+      # Node graph view for traces
+      nodeGraph:
+        enabled: true
+      # Search support
+      search:
+        hide: false
+
+  # ─── Loki (logs) ────────────────────────────────────────────────────────
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://localhost:3100
+    uid: loki
+    isDefault: false
+    editable: true
+    jsonData:
+      # Derived field: link a log's trace_id to its trace in Tempo. Logs arrive
+      # over OTLP, so Loki stores trace_id as *structured metadata* (not embedded
+      # in the message text) — match it as a label, not a regex over the body.
+      derivedFields:
+        - datasourceUid: tempo
+          matcherType: label
+          matcherRegex: trace_id
+          name: trace_id
+          url: '$${__value.raw}'
+          urlDisplayLabel: 'View trace in Tempo'
+
+  # ─── Prometheus / Mimir (metrics) ───────────────────────────────────────
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://localhost:9090
+    uid: prometheus
+    isDefault: true     # Set as default since metrics are most common
+    editable: true
+    jsonData:
+      timeInterval: "15s"
+      # Exemplars: link from metric points to traces via trace_id
+      exemplarTraceIdDestinations:
+        - name: trace_id
+          datasourceUid: tempo
+
+  # ─── Pyroscope (profiles) ───────────────────────────────────────────────
+  # Separate compose service (see stack/compose.yaml); reached from inside
+  # the lgtm container over the compose network by service name.
+  - name: Pyroscope
+    type: grafana-pyroscope-datasource
+    access: proxy
+    url: http://pyroscope:4040
+    uid: pyroscope
+    isDefault: false
+    editable: true

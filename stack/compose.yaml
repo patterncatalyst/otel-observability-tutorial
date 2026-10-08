@@ -1,0 +1,463 @@
+# stack/compose.yaml
+#
+# The one shared infra stack for the tutorial, used by all three language
+# implementations (Spring Boot, Quarkus, Python). Written to the Compose
+# Specification (https://compose-spec.io) so it runs unmodified on either:
+#
+#   docker compose -f stack/compose.yaml up -d
+#   podman compose -f stack/compose.yaml up -d
+#
+# With NO profile selected, only the infra services start: lgtm, pyroscope,
+# postgres, kafka, kafka-ui. The six domain services (order, review,
+# inventory, payment, shipping, notification) are scaffolded below under
+# per-language profiles (`spring`, `quarkus`, `python`) but their build
+# contexts (services/<lang>/<domain>) don't exist yet — Phase 3 of this
+# tutorial fills them in. Until then, `compose config`/`up` with no profile
+# is infra-only; selecting a profile only matters once Phase 3 adds the
+# corresponding service directories.
+#
+# Edges (from the host), once Phase 3 lands:
+#   Grafana UI   : http://localhost:3000
+#   Pyroscope UI : http://localhost:4040
+#   Kafka UI     : http://localhost:8090
+#   Order REST   : http://localhost:8080        (POST /orders, GET /orders/{id})
+#   Review GQL   : http://localhost:8081/graphql
+#
+# Service-to-service (inside the compose network):
+#   inventory gRPC : inventory-<lang>:50051
+#   payment gRPC   : payment-<lang>:50052
+#   Kafka          : kafka:9094
+#   Postgres       : postgres:5432  (db: appdb)
+#   Telemetry      : http://lgtm:4318  (OTLP/HTTP)
+#   Profiles       : http://pyroscope:4040
+
+# Shared service environment, merged into each domain service via the
+# anchor below once Phase 3 adds them.
+x-service-env: &service_env
+  DATABASE_URL: postgres://appuser:apppass@postgres:5432/appdb
+  KAFKA_BOOTSTRAP: kafka:9094
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://lgtm:4318
+  OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+  # Defaults to instrumented; the no-telemetry baseline demo overrides this
+  # by exporting OTEL_SDK_DISABLED=true before `compose up`.
+  OTEL_SDK_DISABLED: "${OTEL_SDK_DISABLED:-false}"
+  # Kafka trace propagation: on by default; one chapter exports =false to
+  # show the trace breaking at the message boundary, then =true to fix it.
+  PROPAGATE_KAFKA_CONTEXT: "${PROPAGATE_KAFKA_CONTEXT:-true}"
+  # Continuous profiling via the Pyroscope SDK; empty disables it.
+  PYROSCOPE_ADDRESS: "${PYROSCOPE_ADDRESS:-http://pyroscope:4040}"
+  DEPLOY_ENV: local
+  SERVICE_VERSION: dev
+
+services:
+  # ======================================================================
+  # Infra — starts by default, no profile required.
+  # ======================================================================
+
+  # --- Observability: the all-in-one Grafana LGTM image -------------------
+  lgtm:
+    image: docker.io/grafana/otel-lgtm:0.35.0
+    ports:
+      - "3000:3000"   # Grafana UI
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+      - "9090:9090"   # Mimir / Prometheus remote-write + query
+      - "3100:3100"   # Loki
+      - "3200:3200"   # Tempo
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+    volumes:
+      # Swap for otelcol/config.tail-sampling.yaml in the Sampling chapter.
+      - ./otelcol/config.yaml:/otel-lgtm/otelcol-config.yaml:Z
+      # Mounted as "zz-..." so it sorts (and loads) after the image's own
+      # built-in grafana-datasources.yaml and sample.yaml in the same
+      # provisioning directory. Grafana provisions every *.yaml it finds
+      # there and the last one processed wins on a UID collision; the
+      # image's defaults point the Tempo/Pyroscope UIDs at its own
+      # internal signals, which would otherwise silently clobber the
+      # correlation links and the external Pyroscope URL configured here.
+      - ./grafana/datasources.yaml:/otel-lgtm/grafana/conf/provisioning/datasources/zz-tutorial-datasources.yaml:Z
+      - ./grafana/dashboards.yaml:/otel-lgtm/grafana/conf/provisioning/dashboards/dashboards.yaml:Z
+      - ./grafana/dashboards:/otel-lgtm/grafana/dashboards:Z
+    healthcheck:
+      # The 0.35.x image ships curl but not wget.
+      test: ["CMD", "curl", "-sf", "http://localhost:3000/api/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 30s
+
+  # --- Profiling: Grafana Pyroscope, the fourth signal --------------------
+  pyroscope:
+    image: docker.io/grafana/pyroscope:2.3.2
+    command: ["server"]
+    ports:
+      - "4040:4040"
+    # No healthcheck: this image is distroless (no shell, no curl/wget), so
+    # there is no CMD that can probe it from inside the container. Its
+    # internal components (metastore, ingester, segment writer, ...) come
+    # up in stages; GET /ready (from the host) can take up to ~2 minutes
+    # to return 200 on a cold start — see stack/README.md.
+
+  # --- Postgres (one db, all domains; see db/init/01-schema.sql) ----------
+  postgres:
+    image: docker.io/library/postgres:17-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: appdb
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: apppass
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data:Z
+      - ./db/init:/docker-entrypoint-initdb.d:Z
+    command: ["postgres", "-c", "log_statement=all", "-c", "shared_buffers=128MB"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U appuser -d appdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+
+  # --- Kafka (single KRaft broker, no ZooKeeper) ---------------------------
+  kafka:
+    image: docker.io/apache/kafka:4.2.2
+    ports:
+      - "9092:9092"   # host clients
+      - "9094:9094"   # compose-internal clients
+    environment:
+      KAFKA_NODE_ID: "1"
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,DOCKER://0.0.0.0:9094
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,DOCKER://kafka:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,DOCKER:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_NUM_PARTITIONS: "3"
+      KAFKA_DEFAULT_REPLICATION_FACTOR: "1"
+      KAFKA_MIN_INSYNC_REPLICAS: "1"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+    volumes:
+      - kafka-data:/var/lib/kafka/data:Z
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  kafka-ui:
+    image: docker.io/provectuslabs/kafka-ui:v0.7.2
+    ports:
+      - "8090:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9094
+      DYNAMIC_CONFIG_ENABLED: "true"
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+  # --- kcat: ad-hoc produce/consume/inspect from the CLI -------------------
+  # Not started by default (`tools` profile). See stack/README.md for usage.
+  kcat:
+    image: docker.io/edenhill/kcat:1.7.1
+    profiles: ["tools"]
+    # This image's busybox `sleep` doesn't understand "infinity"; use a
+    # very large finite value to keep the container up for `exec` commands.
+    entrypoint: ["sleep", "2147483647"]
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+  # ======================================================================
+  # Domain services — Phase 3. Scaffolded here under per-language profiles
+  # so `compose --profile spring|quarkus|python up` has somewhere to land;
+  # none of these build contexts exist yet, so they are inert until then.
+  # With NO profile selected (the default), none of the services below are
+  # considered by `compose up` or `compose config`.
+  # ======================================================================
+
+  # --- order (REST, exposes :8080) -----------------------------------------
+  order-spring:
+    profiles: ["spring"]
+    build:
+      context: ../services/spring/order
+      dockerfile: Containerfile
+    image: localhost/otel-tutorial-order-spring:dev
+    ports:
+      - "8080:8080"
+    environment:
+      <<: *service_env
+      OTEL_SERVICE_NAME: order-spring
+      INVENTORY_ADDR: inventory-spring:50051
+      PAYMENT_ADDR: payment-spring:50052
+    depends_on:
+      postgres: { condition: service_healthy }
+      kafka: { condition: service_healthy }
+      lgtm: { condition: service_healthy }
+
+  order-quarkus:
+    profiles: ["quarkus"]
+    build:
+      context: ../services/quarkus/order
+      dockerfile: Containerfile
+    image: localhost/otel-tutorial-order-quarkus:dev
+    ports:
+      - "8080:8080"
+    environment:
+      <<: *service_env
+      OTEL_SERVICE_NAME: order-quarkus
+      INVENTORY_ADDR: inventory-quarkus:50051
+      PAYMENT_ADDR: payment-quarkus:50052
+    depends_on:
+      postgres: { condition: service_healthy }
+      kafka: { condition: service_healthy }
+      lgtm: { condition: service_healthy }
+
+  order-python:
+    profiles: ["python"]
+    build:
+      context: ../services/python/order
+      dockerfile: Containerfile
+    image: localhost/otel-tutorial-order-python:dev
+    ports:
+      - "8080:8080"
+    environment:
+      <<: *service_env
+      OTEL_SERVICE_NAME: order-python
+      INVENTORY_ADDR: inventory-python:50051
+      PAYMENT_ADDR: payment-python:50052
+    depends_on:
+      postgres: { condition: service_healthy }
+      kafka: { condition: service_healthy }
+      lgtm: { condition: service_healthy }
+
+  # --- review (GraphQL, exposes :8081) -------------------------------------
+  review-spring:
+    profiles: ["spring"]
+    build:
+      context: ../services/spring/review
+      dockerfile: Containerfile
+    image: localhost/otel-tutorial-review-spring:dev
+    ports:
+      - "8081:8081"
+    environment:
+      <<: *service_env
+      OTEL_SERVICE_NAME: review-spring
+    depends_on:
+      postgres: { condition: service_healthy }
+      lgtm: { condition: service_healthy }
+
+  review-quarkus:
+    profiles: ["quarkus"]
+    build:
+      context: ../services/quarkus/review
+      dockerfile: Containerfile
+    image: localhost/otel-tutorial-review-quarkus:dev
+    ports:
+      - "8081:8081"
+    environment:
+      <<: *service_env
+      OTEL_SERVICE_NAME: review-quarkus
+    depends_on:
+      postgres: { condition: service_healthy }
+      lgtm: { condition: service_healthy }
+
+  review-python:
+    profiles: ["python"]
+    build:
+      context: ../services/python/review
+      dockerfile: Containerfile
+    image: localhost/otel-tutorial-review-python:dev
+    ports:
+      - "8081:8081"
+    environment:
+      <<: *service_env
+      OTEL_SERVICE_NAME: review-python
+    depends_on:
+      postgres: { condition: service_healthy }
+      lgtm: { condition: service_healthy }
+
+  # --- inventory (gRPC, internal :50051) ------------------------------------
+  inventory-spring:
+    profiles: ["spring"]
+    build:
+      context: ../services/spring/inventory
+      dockerfile: Containerfile
+    image: localhost/otel-tutorial-inventory-spring:dev
+    environment:
+      <<: *service_env
+      OTEL_SERVICE_NAME: inventory-spring
+    depends_on:
+      postgres: { condition: service_healthy }
+      lgtm: { condition: service_healthy }
+
+  inventory-quarkus:
+    profiles: ["quarkus"]
+    build:
+      context: ../services/quarkus/inventory
+      dockerfile: Containerfile
+    image: localhost/otel-tutorial-inventory-quarkus:dev
+    environment:
+      <<: *service_env
+      OTEL_SERVICE_NAME: inventory-quarkus
+    depends_on:
+      postgres: { condition: service_healthy }
+      lgtm: { condition: service_healthy }
+
+  inventory-python:
+    profiles: ["python"]
+    build:
+      context: ../services/python/inventory
+      dockerfile: Containerfile
+    image: localhost/otel-tutorial-inventory-python:dev
+    environment:
+      <<: *service_env
+      OTEL_SERVICE_NAME: inventory-python
+    depends_on:
+      postgres: { condition: service_healthy }
+      lgtm: { condition: service_healthy }
+
+  # --- payment (gRPC, internal :50052) --------------------------------------
+  payment-spring:
+    profiles: ["spring"]
+    build:
+      context: ../services/spring/payment
+      dockerfile: Containerfile
+    image: localhost/otel-tutorial-payment-spring:dev
+    environment:
+      <<: *service_env
+      OTEL_SERVICE_NAME: payment-spring
+    depends_on:
+      postgres: { condition: service_healthy }
+      lgtm: { condition: service_healthy }
+
+  payment-quarkus:
+    profiles: ["quarkus"]
+    build:
+      context: ../services/quarkus/payment
+      dockerfile: Containerfile
+    image: localhost/otel-tutorial-payment-quarkus:dev
+    environment:
+      <<: *service_env
+      OTEL_SERVICE_NAME: payment-quarkus
+    depends_on:
+      postgres: { condition: service_healthy }
+      lgtm: { condition: service_healthy }
+
+  payment-python:
+    profiles: ["python"]
+    build:
+      context: ../services/python/payment
+      dockerfile: Containerfile
+    image: localhost/otel-tutorial-payment-python:dev
+    environment:
+      <<: *service_env
+      OTEL_SERVICE_NAME: payment-python
+    depends_on:
+      postgres: { condition: service_healthy }
+      lgtm: { condition: service_healthy }
+
+  # --- shipping (Kafka consumer of order.placed) ----------------------------
+  shipping-spring:
+    profiles: ["spring"]
+    build:
+      context: ../services/spring/shipping
+      dockerfile: Containerfile
+    image: localhost/otel-tutorial-shipping-spring:dev
+    environment:
+      <<: *service_env
+      OTEL_SERVICE_NAME: shipping-spring
+    depends_on:
+      postgres: { condition: service_healthy }
+      kafka: { condition: service_healthy }
+      lgtm: { condition: service_healthy }
+
+  shipping-quarkus:
+    profiles: ["quarkus"]
+    build:
+      context: ../services/quarkus/shipping
+      dockerfile: Containerfile
+    image: localhost/otel-tutorial-shipping-quarkus:dev
+    environment:
+      <<: *service_env
+      OTEL_SERVICE_NAME: shipping-quarkus
+    depends_on:
+      postgres: { condition: service_healthy }
+      kafka: { condition: service_healthy }
+      lgtm: { condition: service_healthy }
+
+  shipping-python:
+    profiles: ["python"]
+    build:
+      context: ../services/python/shipping
+      dockerfile: Containerfile
+    image: localhost/otel-tutorial-shipping-python:dev
+    environment:
+      <<: *service_env
+      OTEL_SERVICE_NAME: shipping-python
+    depends_on:
+      postgres: { condition: service_healthy }
+      kafka: { condition: service_healthy }
+      lgtm: { condition: service_healthy }
+
+  # --- notification (Kafka consumer of order.placed) ------------------------
+  notification-spring:
+    profiles: ["spring"]
+    build:
+      context: ../services/spring/notification
+      dockerfile: Containerfile
+    image: localhost/otel-tutorial-notification-spring:dev
+    environment:
+      <<: *service_env
+      OTEL_SERVICE_NAME: notification-spring
+    depends_on:
+      postgres: { condition: service_healthy }
+      kafka: { condition: service_healthy }
+      lgtm: { condition: service_healthy }
+
+  notification-quarkus:
+    profiles: ["quarkus"]
+    build:
+      context: ../services/quarkus/notification
+      dockerfile: Containerfile
+    image: localhost/otel-tutorial-notification-quarkus:dev
+    environment:
+      <<: *service_env
+      OTEL_SERVICE_NAME: notification-quarkus
+    depends_on:
+      postgres: { condition: service_healthy }
+      kafka: { condition: service_healthy }
+      lgtm: { condition: service_healthy }
+
+  notification-python:
+    profiles: ["python"]
+    build:
+      context: ../services/python/notification
+      dockerfile: Containerfile
+    image: localhost/otel-tutorial-notification-python:dev
+    environment:
+      <<: *service_env
+      OTEL_SERVICE_NAME: notification-python
+    depends_on:
+      postgres: { condition: service_healthy }
+      kafka: { condition: service_healthy }
+      lgtm: { condition: service_healthy }
+
+volumes:
+  postgres-data:
+  kafka-data:
+
+networks:
+  default:
+    name: otel-observability-tutorial

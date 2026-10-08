@@ -1,0 +1,52 @@
+{
+  "name": "otel-observability-tutorial",
+  // UBI-based universal image keeps us close to the Containerfiles the
+  // domain services use in Phase 3; swap for "mcr.microsoft.com/devcontainers/base:ubuntu"
+  // if you'd rather not depend on Red Hat's registry.
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+
+  "features": {
+    // JDK 25 for the Spring Boot and Quarkus services (Phase 3).
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "25",
+      "installMaven": true,
+      "installGradle": false
+    },
+    // Python 3.14 for the Python services (Phase 3).
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.14"
+    },
+    // Node, used by Newman (Postman CLI) for the REST/GraphQL API test
+    // collections, and by the diagram generator's tooling if needed.
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
+    },
+    // Docker CLI pointed at the HOST's Docker daemon (docker-outside-of-
+    // docker), not a nested daemon. This is what lets Testcontainers and
+    // Quarkus Dev Services spin up containers from inside the devcontainer.
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+      "version": "latest"
+    }
+  },
+
+  // NOTE: for local dependencies (Postgres, Kafka, etc.) during day-to-day
+  // service development, prefer Testcontainers (Spring Boot, Python) or
+  // Quarkus Dev Services (Quarkus) over manually running `stack/compose.yaml`.
+  // Both auto-start and tear down throwaway containers scoped to a single
+  // test/dev run using the Docker socket forwarded by docker-outside-of-
+  // docker above — docker is installed and ready for that. Reach for
+  // `stack/compose.yaml` when you want the full, long-lived shared stack
+  // (e.g. to look at traces in Grafana across services), not for routine
+  // unit/integration test runs.
+
+  "forwardPorts": [3000, 4040, 8090],
+  "portsAttributes": {
+    "3000": { "label": "Grafana" },
+    "4040": { "label": "Pyroscope" },
+    "8090": { "label": "Kafka UI" }
+  },
+
+  "postCreateCommand": "bundle install",
+
+  "remoteUser": "vscode"
+}

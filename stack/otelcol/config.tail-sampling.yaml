@@ -1,0 +1,114 @@
+# stack/otelcol/config.tail-sampling.yaml
+#
+# Collector config with tail sampling, for the Sampling chapter. Services
+# send 100% of traces; the Collector buffers each trace until all spans
+# arrive, then applies policies to decide what to keep.
+#
+# Cost: Collector RAM scales with concurrent in-flight traces. Plan for
+# ~10-50 KB per trace, decision window seconds.
+#
+# This config is a layer on top of config.yaml — swap it in by changing the
+# volume mount in stack/compose.yaml from ./otelcol/config.yaml to
+# ./otelcol/config.tail-sampling.yaml and restarting the lgtm service.
+#
+# IMPORTANT: tail_sampling is only available in the *contrib* build of the
+# OpenTelemetry Collector. The grafana/otel-lgtm image bundles the contrib
+# distribution, so this works out of the box here.
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 1024  # Higher than base: tail sampling buffers more
+    spike_limit_mib: 256
+
+  # Tail sampling: decision after the trace completes.
+  tail_sampling:
+    # How long to wait for trailing spans before making a decision.
+    # 30s is a reasonable default. Lower it if your traces complete
+    # quickly; raise it if you have long-running operations.
+    decision_wait: 30s
+    # How many traces to keep in memory at once.
+    num_traces: 50000
+    # Cost-control safety: drop new traces if we hit this many.
+    expected_new_traces_per_sec: 1000
+
+    policies:
+      # Policy 1: keep every error
+      - name: errors-policy
+        type: status_code
+        status_code:
+          status_codes: [ERROR]
+
+      # Policy 2: keep every slow request
+      - name: slow-policy
+        type: latency
+        latency:
+          threshold_ms: 1000
+
+      # Policy 3: keep every trace from a specific high-value endpoint
+      # (replace `/orders` with your business-critical routes)
+      - name: critical-routes
+        type: string_attribute
+        string_attribute:
+          key: http.target
+          values: [/orders]
+
+      # Policy 4: keep a small fraction of healthy traces for sanity
+      - name: probabilistic-baseline
+        type: probabilistic
+        probabilistic:
+          sampling_percentage: 5  # Keep 5% of everything else
+
+  batch:
+    timeout: 200ms
+    send_batch_size: 8192
+
+  resource:
+    attributes:
+      - key: deployment.environment
+        value: local
+        action: upsert
+
+exporters:
+  otlphttp/tempo:
+    endpoint: http://localhost:3200
+    tls:
+      insecure: true
+
+  prometheusremotewrite:
+    endpoint: http://localhost:9090/api/v1/write
+    tls:
+      insecure: true
+
+  otlphttp/loki:
+    endpoint: http://localhost:3100/otlp
+    tls:
+      insecure: true
+
+service:
+  telemetry:
+    logs:
+      level: info
+  pipelines:
+    # Traces pipeline has tail_sampling; others don't (sampling only
+    # makes sense for trace data).
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, tail_sampling, batch]
+      exporters: [otlphttp/tempo]
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, batch]
+      exporters: [prometheusremotewrite]
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, batch]
+      exporters: [otlphttp/loki]

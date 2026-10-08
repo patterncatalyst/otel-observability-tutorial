@@ -1,0 +1,94 @@
+# stack/otelcol/config.yaml
+#
+# Base OpenTelemetry Collector configuration.
+#
+# Receives OTLP (HTTP and gRPC) from the domain services, applies a few
+# safety processors, and exports to the LGTM stack's internal backends
+# (Tempo for traces, Mimir for metrics, Loki for logs). This Collector runs
+# *inside* the `lgtm` all-in-one container, so the exporter endpoints below
+# are localhost — the three backends are side-by-side processes in that one
+# image, not separate compose services.
+#
+# This config is the floor — every Collector in this tutorial should at
+# minimum have: memory_limiter, batch, and the three signal exporters. The
+# tail-sampling chapter layers a processor on top (see
+# config.tail-sampling.yaml).
+#
+# Mounted into the lgtm container at /otel-lgtm/otelcol-config.yaml (see
+# stack/compose.yaml).
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  # memory_limiter is THE most important processor. Without it, a flood of
+  # incoming telemetry can OOM-kill the Collector, taking your observability
+  # offline at the worst possible moment. Always include it first.
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+    spike_limit_mib: 128
+
+  # batch reduces export overhead by accumulating spans/metrics/logs into
+  # batches before shipping. The default 8192-or-200ms threshold works for
+  # most workloads.
+  batch:
+    timeout: 200ms
+    send_batch_size: 8192
+
+  # resource attaches service-level metadata to every signal. Useful for
+  # filling in gaps from poorly-instrumented services.
+  resource:
+    attributes:
+      - key: deployment.environment
+        value: local
+        action: upsert
+
+exporters:
+  # Traces → Tempo (built into the lgtm image)
+  otlphttp/tempo:
+    endpoint: http://localhost:3200
+    tls:
+      insecure: true
+
+  # Metrics → Prometheus/Mimir (built into the lgtm image)
+  prometheusremotewrite:
+    endpoint: http://localhost:9090/api/v1/write
+    tls:
+      insecure: true
+
+  # Logs → Loki (built into the lgtm image)
+  otlphttp/loki:
+    endpoint: http://localhost:3100/otlp
+    tls:
+      insecure: true
+
+  # Optional: also export to stdout for debugging during development.
+  # Comment out in production.
+  debug:
+    verbosity: basic
+    sampling_initial: 5
+    sampling_thereafter: 100
+
+service:
+  telemetry:
+    logs:
+      level: info
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, batch]
+      exporters: [otlphttp/tempo]
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, batch]
+      exporters: [prometheusremotewrite]
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, batch]
+      exporters: [otlphttp/loki]
