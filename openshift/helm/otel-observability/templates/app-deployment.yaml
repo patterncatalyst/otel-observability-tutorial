@@ -64,20 +64,32 @@ spec:
                 command: ["sh", "-c", "sleep 10"]
           {{- end }}
           {{- if eq $svc.probe "http" }}
+          # Startup budget sized for a JVM cold start: the spring images boot
+          # Spring Boot under two javaagents (OTel + Pyroscope) and can take
+          # well over a minute to bind their port on a constrained CRC VM, so
+          # this allows ~3 minutes before liveness takes over. The python track
+          # binds in seconds and simply passes on the first probe. timeoutSeconds
+          # is raised above the 1s default because the spring and quarkus health
+          # aggregates (DB + Kafka indicators) can take longer than a second to
+          # answer under CRC's constrained CPU, and a 1s probe times out before
+          # the endpoint replies.
           startupProbe:
             httpGet: { path: {{ $svc.healthPath }}, port: http }
-            initialDelaySeconds: 5
-            periodSeconds: 2
-            failureThreshold: 30
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 36
           readinessProbe:
             httpGet: { path: {{ $svc.healthPath }}, port: http }
             initialDelaySeconds: 5
             periodSeconds: 5
+            timeoutSeconds: 5
             failureThreshold: 3
           livenessProbe:
             httpGet: { path: {{ $svc.healthPath }}, port: http }
             initialDelaySeconds: 10
             periodSeconds: 10
+            timeoutSeconds: 5
             failureThreshold: 3
           {{- else if eq $svc.probe "grpc" }}
           startupProbe:
@@ -105,10 +117,10 @@ spec:
               cpu: {{ $root.Values.resources.limits.cpu }}
               memory: {{ $root.Values.resources.limits.memory }}
           # No runAsUser: restricted-v2 assigns a UID from the namespace
-          # range, and every services/<lang>/<domain>/Containerfile image
-          # already runs as `USER 1001:0` (arbitrary UID, group 0) — the
-          # same convention restricted-v2 expects, so no SCC grant is needed
-          # for the six app Deployments.
+          # range. The python images run as `USER 1001:0` and the spring and
+          # quarkus images as `USER 185:0`; both are arbitrary-UID, group-zero
+          # conventions restricted-v2 accepts, so no SCC grant is needed for
+          # the six app Deployments on any track.
           securityContext:
             runAsNonRoot: true
             allowPrivilegeEscalation: false
@@ -116,4 +128,18 @@ spec:
               drop: ["ALL"]
             seccompProfile:
               type: RuntimeDefault
+          # Writable log directory. The spring and quarkus images write a
+          # rolling log file under /deployments/logs (LOG_DIR), a directory
+          # their Containerfiles create owned by 185:0 but not group-writable,
+          # so restricted-v2's randomly assigned UID cannot create the file and
+          # the JVM tracks fail at startup. An emptyDir, which restricted-v2's
+          # assigned fsGroup makes group-writable, gives every app pod a log
+          # dir it can write regardless of track. The python track logs to
+          # stdout/OTLP and simply leaves this mount empty.
+          volumeMounts:
+            - name: app-logs
+              mountPath: /deployments/logs
+      volumes:
+        - name: app-logs
+          emptyDir: {}
 {{- end }}

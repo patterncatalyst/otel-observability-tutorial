@@ -9,14 +9,17 @@
 #
 # SCOPE: this chart deploys one language track at a time (`language:`
 # below), matching stack/compose.yaml's `--profile spring|quarkus|python`
-# switch. `python` is the default because its images are the ones verified
-# end to end against a live cluster elsewhere in this project (see
-# project_datamesh_python_openshift notes); pointing `language` at `spring`
-# or `quarkus` only changes the image repository name each service
-# resolves to — the Deployment/Service/Route shape, env contract, and SCC
-# story are identical across all three tracks, since all three Containerfiles
-# already build to the same `USER 1001:0` / restricted-v2-compatible
-# convention (see stack/compose.yaml's per-language service blocks).
+# switch. All three tracks have been deployed and verified on a live CRC
+# cluster (see _docs/25-appendix-openshift-crc.md); `python` is the default.
+# The Deployment/Service/Route shape and the env contract are the same for
+# every track, and the SCC story is too: the python images run as
+# `USER 1001:0` and the spring/quarkus images as `USER 185:0`, both
+# arbitrary-UID, group-zero and restricted-v2-compatible. The probe
+# `healthPath` (`/actuator/health`, which all three expose), the writable
+# /deployments/logs mount the JVM tracks need, and the Postgres `password`
+# (read directly by the spring/quarkus datasources, not just via DATABASE_URL)
+# are the settings that genuinely have to hold across tracks — they live in
+# this file so the `--set language=` swap is all a reader runs.
 language: python
 
 # Container image settings. On OpenShift the natural home is the integrated
@@ -33,12 +36,18 @@ image:
 # Dev-only Postgres credential, rendered into a Secret (templates/secret-db.yaml)
 # as a single DATABASE_URL DSN — the same env var name and connection-string
 # shape stack/compose.yaml's `x-service-env` anchor uses, so no application
-# code changes between compose and this chart.
+# code changes between compose and this chart. The password must match what
+# stack/compose.yaml seeds (`apppass`): the python services read it from the
+# DATABASE_URL DSN, but the spring and quarkus services take the same
+# credential from their hardcoded `spring.datasource.password` /
+# `quarkus.datasource.password` (both `apppass`), so a divergent value here
+# authenticates the python track yet leaves the two JVM tracks unable to reach
+# Postgres and stuck DOWN on their health check.
 # PRODUCTION: replace with a SealedSecret / ExternalSecret — never plaintext
 # Postgres credentials committed to a values file.
 postgres:
   username: "appuser"
-  password: "apppass_dev_only"
+  password: "apppass"
   database: "appdb"
   image: "docker.io/library/postgres:17-alpine"
   storage: "2Gi"
@@ -111,7 +120,11 @@ services:
   order:
     port: 8080
     probe: http
-    healthPath: /health
+    # /actuator/health is the one readiness path all three tracks expose: the
+    # python services define it directly, spring serves it through Actuator, and
+    # quarkus remaps SmallRye Health onto it (quarkus.smallrye-health.root-path).
+    # /health exists only on the python track, so the probe uses this instead.
+    healthPath: /actuator/health
     route: true
     # order calls inventory and payment over gRPC — see INVENTORY_ADDR/
     # PAYMENT_ADDR wiring in templates/app-deployment.yaml.
@@ -119,7 +132,7 @@ services:
   review:
     port: 8081
     probe: http
-    healthPath: /health
+    healthPath: /actuator/health
     route: true
   inventory:
     port: 50051
@@ -136,9 +149,14 @@ services:
 
 # Resource requests/limits for the six app Deployments. One tier is enough
 # for a tutorial-scale demo; split further if a given service turns out to
-# need more under load.
+# need more under load. The memory request is set below the JVM tracks' actual
+# footprint on purpose: on a single-node 16 GB CRC VM the sum of six app
+# requests plus the lgtm/pyroscope/postgres/kafka infra has to leave the node
+# schedulable, and scheduling reserves the request, not the limit. The 512Mi
+# limit still gives the spring and quarkus JVMs (which run under two javaagents)
+# the headroom they need; the python track stays well under the request.
 resources:
-  requests: { cpu: 100m, memory: 192Mi }
+  requests: { cpu: 100m, memory: 128Mi }
   limits: { cpu: 500m, memory: 512Mi }
 
 # Shared observability env, mirroring stack/compose.yaml's `x-service-env`
