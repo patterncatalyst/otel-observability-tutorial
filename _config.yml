@@ -67,12 +67,20 @@ defaults:
       layout: part_index
       sectionid: docs
 
-# Files/dirs Jekyll should not process or include in the built site.
+# Files/dirs Jekyll should not process or include in the built site. The code
+# trees (services/, stack/, proto/) and dev tooling (scripts/, .devcontainer/)
+# are source for the demo, not site content — excluding them keeps the build
+# clean and fast.
 exclude:
   - Gemfile
   - Gemfile.lock
   - vendor/
   - node_modules/
+  - services/
+  - stack/
+  - proto/
   - scripts/
+  - .devcontainer/
+  - demos/
   - README.md
   - LICENSE
