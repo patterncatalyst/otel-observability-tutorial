@@ -99,6 +99,13 @@ Signal-correlation showcase.
   observability-python-otel-lgtm; add it (and this tutorial) to hub sites.yml.
 
 ## Status
-- [in progress] Phase 0 — reading list
-- [in progress] Phase 1 — scaffold + infra (local)
-- [ ] Phase 2..6
+- [DONE] Phase 0 — reading list (4 books live on hub)
+- [DONE] Phase 1 — scaffold + infra (local; Opus-validated PASS, live Grafana check):
+  site shell, 6 parts, 26 chapter stubs (incl. CRC appendix), codetabs, diagram
+  engine; portable compose (otel-lgtm 0.35.0 + pyroscope 2.3.2 + postgres17 +
+  kafka 4.2.2 + kafka-ui + kcat) + collector(+tail-sampling) + grafana
+  provisioning; devcontainer; validators + vendored voice CI gate. NOT pushed yet.
+- [ ] Phase 2 — agnostic chapters
+- [ ] Phase 3 — per-language demos + tabbed signal chapters (needs lgtm-python/spring-boot skills first)
+- [ ] Phase 4 — decks ; Phase 5 — dashboards ; Phase 6 — sunset/migration (gated)
+- Side workstream: create lgtm-python + lgtm-spring-boot skills (before Phase 3)
