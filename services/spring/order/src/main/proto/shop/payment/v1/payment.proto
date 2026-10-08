@@ -1,0 +1,25 @@
+// Payment domain service — synchronous gRPC, called by the order service to
+// authorize funds before the order is confirmed. The second gRPC hop the
+// trace follows.
+syntax = "proto3";
+
+package shop.payment.v1;
+
+import "shop/common/v1/common.proto";
+
+service PaymentService {
+  // Authorize (not capture) funds for an order. Idempotent on order_id.
+  rpc Authorize(AuthorizeRequest) returns (AuthorizeResponse);
+}
+
+message AuthorizeRequest {
+  string order_id = 1;
+  string customer_id = 2;
+  shop.common.v1.Money amount = 3;
+}
+
+message AuthorizeResponse {
+  bool authorized = 1;
+  string authorization_id = 2;
+  string decline_reason = 3;   // empty when authorized
+}

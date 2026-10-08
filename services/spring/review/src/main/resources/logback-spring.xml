@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Structured logging for the OTel tutorial Spring Boot services.
+
+  The OpenTelemetry Java agent injects trace_id / span_id / trace_flags into
+  the logback MDC (logback-mdc instrumentation, on by default), so the patterns
+  below print the active trace context on every line. The agent also attaches
+  its own OTLP logback appender that ships these logs to Loki with trace_id as
+  structured metadata — that is what powers the logs<->traces correlation in
+  Grafana and is independent of the file/console appenders here.
+
+  The FILE appender gives Claude Code a persistent, grep-able record for
+  post-run diagnosis.
+-->
+<configuration>
+  <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+  <property name="APP" value="${spring.application.name:-app}"/>
+  <!-- LOG_DIR defaults to ./logs for local runs; the container image sets it to
+       a writable absolute path (see Containerfile). -->
+  <property name="LOG_DIR" value="${LOG_DIR:-logs}"/>
+
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%d{HH:mm:ss.SSS} %-5level [%X{trace_id:-}/%X{span_id:-}] [%logger{36}] %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG_DIR}/${APP}.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+      <fileNamePattern>${LOG_DIR}/${APP}-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+      <maxFileSize>10MB</maxFileSize>
+      <maxHistory>5</maxHistory>
+    </rollingPolicy>
+    <encoder>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{trace_id:-}/%X{span_id:-}] [%logger{40}] (%thread) %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <root level="INFO">
+    <appender-ref ref="CONSOLE"/>
+    <appender-ref ref="FILE"/>
+  </root>
+
+  <logger name="org.apache.kafka" level="WARN"/>
+  <logger name="org.springframework.kafka" level="WARN"/>
+</configuration>

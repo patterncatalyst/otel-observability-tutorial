@@ -1,0 +1,48 @@
+# Multi-stage UBI 10 Containerfile — Spring Boot service for the OTel tutorial.
+#
+# Build stage compiles the app AND copies the OpenTelemetry + Pyroscope Java
+# agents into target/agents (via maven-dependency-plugin, pinned in pom.xml).
+# The runtime stage runs the Spring Boot jar under the UBI run-java.sh launcher,
+# with entrypoint.sh assembling the -javaagent flags from the environment
+# (Kafka propagation toggle + Pyroscope gate).
+
+# ── Stage 1: Build ──────────────────────────────────────────
+FROM registry.access.redhat.com/ubi10/openjdk-25:1.24 AS build
+# The UBI openjdk builder image defaults to uid 185; run the build as root so
+# Maven can create /build/target under rootless podman (this stage is discarded,
+# so it has no bearing on the runtime image, which keeps USER 185 below).
+USER root
+WORKDIR /build
+COPY pom.xml .
+COPY src ./src
+RUN mvn -B -ntp package -DskipTests -Dmaven.javadoc.skip=true
+
+# ── Stage 2: Runtime ────────────────────────────────────────
+FROM registry.access.redhat.com/ubi10/openjdk-25-runtime:1.24
+ENV LANGUAGE='en_US:en'
+
+# Application jar (Spring Boot repackaged executable jar).
+COPY --from=build --chown=185 /build/target/*.jar /deployments/app.jar
+# Java agents: OTel auto-instrumentation + Grafana Pyroscope continuous profiling.
+COPY --from=build --chown=185 /build/target/agents/ /deployments/agents/
+# Entrypoint translates env (PROPAGATE_KAFKA_CONTEXT, PYROSCOPE_ADDRESS) into agent flags.
+COPY --chown=185 entrypoint.sh /deployments/entrypoint.sh
+
+# Writable log directory for the logback FILE appender (uid 185, gid 0).
+USER root
+RUN mkdir -p /deployments/logs && chown 185:0 /deployments/logs
+
+USER 185
+
+# OTel SDK defaults (overridable via compose env). The endpoint, protocol,
+# service name, OTEL_SDK_DISABLED and PROPAGATE_KAFKA_CONTEXT come from compose.
+ENV LOG_DIR=/deployments/logs \
+    OTEL_TRACES_EXPORTER=otlp \
+    OTEL_METRICS_EXPORTER=otlp \
+    OTEL_LOGS_EXPORTER=otlp \
+    OTEL_PROPAGATORS=tracecontext,baggage \
+    OTEL_METRICS_EXEMPLAR_FILTER=trace_based \
+    OTEL_INSTRUMENTATION_MICROMETER_ENABLED=true \
+    JAVA_APP_JAR="/deployments/app.jar"
+
+ENTRYPOINT [ "/bin/sh", "/deployments/entrypoint.sh" ]

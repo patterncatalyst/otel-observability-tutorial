@@ -1,0 +1,12 @@
+// Shared message types used across the gRPC services.
+// Compiled into each language's generated stub package (Phase 3).
+syntax = "proto3";
+
+package shop.common.v1;
+
+// Money as integer minor units (cents) plus an ISO-4217 currency code, so we
+// never ship floating-point money across a wire.
+message Money {
+  int64 amount_cents = 1;
+  string currency = 2;   // e.g. "USD"
+}

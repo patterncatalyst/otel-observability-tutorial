@@ -1,0 +1,15 @@
+type Review {
+    id: ID!
+    sku: String!
+    rating: Int!
+    body: String!
+}
+
+type Query {
+    reviews(sku: String): [Review!]!
+    review(id: ID!): Review
+}
+
+type Mutation {
+    addReview(sku: String!, rating: Int!, body: String!): Review!
+}
