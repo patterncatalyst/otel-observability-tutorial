@@ -109,6 +109,6 @@ Signal-correlation showcase.
 - [DONE] Phase 3a Spring + 3b Quarkus/Python service sets — all 5 signals verified live for all 3 languages (local-only, not pushed)
 - [DONE] Phase 3c — 10 tabbed chapters (04,07,08-14,17) with real 3-language codetabs, diagrams, validated
 - [DONE] Phase 4 — 4 decks (101 + Spring/Quarkus/Python 201), validated (repair round: removed fabricated Python code, voice swept)
-- [ ] Phase 5 — 7 Grafana dashboards + CRC appendix (ch25)
+- [DONE] Phase 5 — 7 provisioned Grafana dashboards (verified live) + CRC appendix ch25 + openshift/ Helm chart (lint-clean, not cluster-verified)
 - [ ] Phase 6 — sunset/migration (gated)
 - Side workstream: create lgtm-python + lgtm-spring-boot skills (before Phase 3)
