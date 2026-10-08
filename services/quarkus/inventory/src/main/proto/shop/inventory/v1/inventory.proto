@@ -1,0 +1,36 @@
+// Inventory domain service — synchronous gRPC, called service-to-service by the
+// order service before an order is accepted. This is one of the hops the
+// tutorial follows end to end: the order service's trace context propagates
+// into these calls automatically via each language's gRPC instrumentation.
+syntax = "proto3";
+
+package shop.inventory.v1;
+
+service InventoryService {
+  // Is there enough stock for this SKU? A pure read.
+  rpc CheckStock(CheckStockRequest) returns (CheckStockResponse);
+  // Reserve stock for an order. A write; idempotent on order_id.
+  rpc Reserve(ReserveRequest) returns (ReserveResponse);
+}
+
+message CheckStockRequest {
+  string sku = 1;
+  int32 quantity = 2;
+}
+
+message CheckStockResponse {
+  bool available = 1;
+  int32 on_hand = 2;
+}
+
+message ReserveRequest {
+  string order_id = 1;
+  string sku = 2;
+  int32 quantity = 3;
+}
+
+message ReserveResponse {
+  bool reserved = 1;
+  string reservation_id = 2;
+  int32 remaining = 3;
+}

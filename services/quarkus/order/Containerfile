@@ -1,0 +1,52 @@
+# Multi-stage UBI 10 Containerfile — Quarkus service for the OTel tutorial.
+#
+# Build stage compiles the app (Quarkus fast-jar) AND copies the Pyroscope
+# Java agent into target/agents (via maven-dependency-plugin, pinned in
+# pom.xml) — there is no OpenTelemetry Java agent here: traces/metrics/logs
+# come from the in-tree quarkus-opentelemetry + quarkus-micrometer-opentelemetry
+# extensions, baked into the jar at build time. The runtime stage runs the
+# Quarkus fast-jar under the UBI run-java.sh launcher, with entrypoint.sh
+# assembling the -javaagent flag for Pyroscope (gated on PYROSCOPE_ADDRESS)
+# and splitting INVENTORY_ADDR/PAYMENT_ADDR into the host/port pairs the
+# gRPC client config needs.
+
+# ── Stage 1: Build ──────────────────────────────────────────
+FROM registry.access.redhat.com/ubi10/openjdk-25:1.24 AS build
+# The UBI openjdk builder image defaults to uid 185; run the build as root so
+# Maven can create /build/target under rootless podman (this stage is discarded,
+# so it has no bearing on the runtime image, which keeps USER 185 below).
+USER root
+WORKDIR /build
+COPY pom.xml .
+COPY src ./src
+RUN mvn -B -ntp package -DskipTests -Dmaven.javadoc.skip=true
+
+# ── Stage 2: Runtime ────────────────────────────────────────
+FROM registry.access.redhat.com/ubi10/openjdk-25-runtime:1.24
+ENV LANGUAGE='en_US:en'
+
+# Quarkus fast-jar layout.
+COPY --from=build --chown=185 /build/target/quarkus-app/lib/ /deployments/lib/
+COPY --from=build --chown=185 /build/target/quarkus-app/*.jar /deployments/
+COPY --from=build --chown=185 /build/target/quarkus-app/app/ /deployments/app/
+COPY --from=build --chown=185 /build/target/quarkus-app/quarkus/ /deployments/quarkus/
+# Java agent: Grafana Pyroscope continuous profiling (no OTel agent — see above).
+COPY --from=build --chown=185 /build/target/agents/ /deployments/agents/
+# Entrypoint translates env (INVENTORY_ADDR/PAYMENT_ADDR, PYROSCOPE_ADDRESS) into
+# JVM flags / config env vars.
+COPY --chown=185 entrypoint.sh /deployments/entrypoint.sh
+
+# Writable log directory for quarkus.log.file (uid 185, gid 0).
+USER root
+RUN mkdir -p /deployments/logs && chown 185:0 /deployments/logs
+
+USER 185
+
+# OTel SDK defaults (overridable via compose env). The endpoint, protocol,
+# service name and OTEL_SDK_DISABLED come from compose; PROPAGATE_KAFKA_CONTEXT
+# is read directly by application.properties (quarkus.otel.instrument.messaging).
+ENV LOG_DIR=/deployments/logs \
+    OTEL_PROPAGATORS=tracecontext,baggage \
+    JAVA_APP_JAR="/deployments/quarkus-run.jar"
+
+ENTRYPOINT [ "/bin/sh", "/deployments/entrypoint.sh" ]
