@@ -81,8 +81,9 @@ openshift/
    installing the chart three times into three namespaces, not a feature this
    chart adds. All three tracks have been deployed and verified one at a time
    on a live CRC cluster via `helm upgrade --set language=`; the few settings
-   that differ across tracks (the `/actuator/health` probe path, the writable
-   log mount the JVM images need, and the Postgres credential) are carried in
+   that differ across tracks (the per-language health-probe path — `/health`
+   for python, `/actuator/health` for spring and quarkus — the writable log
+   mount the JVM images need, and the Postgres credential) are carried in
    `values.yaml` so the switch is all that changes. See
    [`_docs/25-appendix-openshift-crc.md`](../_docs/25-appendix-openshift-crc.md).
 
