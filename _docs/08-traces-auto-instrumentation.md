@@ -2,7 +2,7 @@
 title: "Traces: auto-instrumentation"
 order: 8
 part: "The signals"
-description: "Getting a first end-to-end trace for free with each stack's auto-instrumentation agent or library."
+description: "Getting a first end-to-end trace with each stack's auto-instrumentation agent or library, no manual code."
 ---
 
 This chapter is a placeholder in the The signals part of the tutorial. It will
