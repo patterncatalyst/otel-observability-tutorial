@@ -64,29 +64,32 @@ spec:
                 command: ["sh", "-c", "sleep 10"]
           {{- end }}
           {{- if eq $svc.probe "http" }}
-          # Startup budget sized for a JVM cold start: the spring images boot
-          # Spring Boot under two javaagents (OTel + Pyroscope) and can take
-          # well over a minute to bind their port on a constrained CRC VM, so
-          # this allows ~3 minutes before liveness takes over. The python track
-          # binds in seconds and simply passes on the first probe. timeoutSeconds
-          # is raised above the 1s default because the spring and quarkus health
-          # aggregates (DB + Kafka indicators) can take longer than a second to
-          # answer under CRC's constrained CPU, and a 1s probe times out before
-          # the endpoint replies.
+          {{- $healthPath := index $root.Values.healthPathByLanguage $root.Values.language }}
+          # Health path is selected per language (see values.yaml
+          # healthPathByLanguage): python serves /health, spring and quarkus
+          # /actuator/health. Startup budget sized for a JVM cold start: the
+          # spring images boot Spring Boot under two javaagents (OTel +
+          # Pyroscope) and can take well over a minute to bind their port on a
+          # constrained CRC VM, so this allows ~3 minutes before liveness takes
+          # over. The python track binds in seconds and passes on the first
+          # probe. timeoutSeconds is raised above the 1s default because the
+          # spring and quarkus health aggregates (DB + Kafka indicators) can
+          # take longer than a second to answer under CRC's constrained CPU,
+          # and a 1s probe times out before the endpoint replies.
           startupProbe:
-            httpGet: { path: {{ $svc.healthPath }}, port: http }
+            httpGet: { path: {{ $healthPath }}, port: http }
             initialDelaySeconds: 10
             periodSeconds: 5
             timeoutSeconds: 5
             failureThreshold: 36
           readinessProbe:
-            httpGet: { path: {{ $svc.healthPath }}, port: http }
+            httpGet: { path: {{ $healthPath }}, port: http }
             initialDelaySeconds: 5
             periodSeconds: 5
             timeoutSeconds: 5
             failureThreshold: 3
           livenessProbe:
-            httpGet: { path: {{ $svc.healthPath }}, port: http }
+            httpGet: { path: {{ $healthPath }}, port: http }
             initialDelaySeconds: 10
             periodSeconds: 10
             timeoutSeconds: 5
