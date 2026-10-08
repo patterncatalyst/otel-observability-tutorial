@@ -75,12 +75,16 @@ openshift/
 5. **One language track per install.** `stack/compose.yaml` scaffolds all
    three stacks (`spring`, `quarkus`, `python`) under compose profiles, any of
    which can run side by side locally. This chart's `values.yaml` has one
-   `language` switch — `python` by default, since its images are the ones
-   verified against a Containerfile-to-cluster path elsewhere in this
-   project — because a single OpenShift namespace deploying three copies of
-   the same six Services under the same names would collide; running more
-   than one track at once would mean installing the chart three times into
-   three namespaces, not a feature this chart adds.
+   `language` switch — `python` by default — because a single OpenShift
+   namespace deploying three copies of the same six Services under the same
+   names would collide; running more than one track at once would mean
+   installing the chart three times into three namespaces, not a feature this
+   chart adds. All three tracks have been deployed and verified one at a time
+   on a live CRC cluster via `helm upgrade --set language=`; the few settings
+   that differ across tracks (the `/actuator/health` probe path, the writable
+   log mount the JVM images need, and the Postgres credential) are carried in
+   `values.yaml` so the switch is all that changes. See
+   [`_docs/25-appendix-openshift-crc.md`](../_docs/25-appendix-openshift-crc.md).
 
 Everything else — the shared env contract (`OTEL_EXPORTER_OTLP_ENDPOINT`,
 `DATABASE_URL`, `KAFKA_BOOTSTRAP`, `PROPAGATE_KAFKA_CONTEXT`,
