@@ -50,9 +50,11 @@ processors:
         action: upsert
 
 exporters:
-  # Traces → Tempo (built into the lgtm image)
+  # Traces → Tempo (built into the lgtm image). Tempo's OTLP ingest listens on
+  # 4418 (HTTP) / 4417 (gRPC) inside this image; 3200 is Tempo's query API, not
+  # an OTLP receiver, so traces sent there are silently dropped.
   otlphttp/tempo:
-    endpoint: http://localhost:3200
+    endpoint: http://localhost:4418
     tls:
       insecure: true
 

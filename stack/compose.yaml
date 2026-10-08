@@ -193,6 +193,8 @@ services:
       postgres: { condition: service_healthy }
       kafka: { condition: service_healthy }
       lgtm: { condition: service_healthy }
+      inventory-spring: { condition: service_started }
+      payment-spring: { condition: service_started }
 
   order-quarkus:
     profiles: ["quarkus"]
