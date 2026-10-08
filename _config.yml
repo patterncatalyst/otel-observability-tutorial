@@ -1,0 +1,78 @@
+# ────────────────────────────────────────────────────────────────────────────
+# OpenTelemetry Observability Tutorial
+# Site identity, GitHub link target, and baseurl. Build configuration below
+# generally doesn't need changes.
+# ────────────────────────────────────────────────────────────────────────────
+
+# Site identity
+title: "OpenTelemetry Observability Tutorial"
+description: "Learn OpenTelemetry with the Grafana LGTM stack by instrumenting the same e-commerce demo across Spring Boot, Quarkus, and Python."
+brand_emoji: "🔭"   # appears next to the title in the header
+
+# GitHub identity for header link and example sourcing
+# Owner/repo for the header + footer links and example sourcing.
+github_username: "patterncatalyst"
+github_repo: "otel-observability-tutorial"
+
+# baseurl
+# - On a project Pages site (USERNAME.github.io/otel-observability-tutorial): "/otel-observability-tutorial"
+# - On a user/org Pages site (USERNAME.github.io):                            ""
+# - For local dev, override at runtime: bundle exec jekyll serve --baseurl ""
+baseurl: "/otel-observability-tutorial"
+
+url: "https://patterncatalyst.github.io"
+
+license: "Apache 2.0"
+
+# ────────────────────────────────────────────────────────────────────────────
+# Build configuration — generally don't change these.
+# ────────────────────────────────────────────────────────────────────────────
+
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+permalink: pretty
+
+# Collections — _docs, _plans, and _parts are not Jekyll defaults; this
+# enables them.
+collections:
+  docs:
+    output: true
+    permalink: /docs/:name/
+  plans:
+    output: false   # internal tracking — kept in the repo, not published to the site
+  parts:
+    output: true
+    permalink: /parts/:name/
+
+# Default front-matter — saves typing `layout: tutorial` on every doc.
+defaults:
+  - scope:
+      path: ""
+      type: docs
+    values:
+      layout: tutorial
+      sectionid: docs
+  - scope:
+      path: ""
+      type: plans
+    values:
+      layout: plan
+  - scope:
+      path: ""
+      type: parts
+    values:
+      layout: part_index
+      sectionid: docs
+
+# Files/dirs Jekyll should not process or include in the built site.
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - vendor/
+  - node_modules/
+  - scripts/
+  - README.md
+  - LICENSE

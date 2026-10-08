@@ -1,0 +1,89 @@
+---
+layout: default
+title: Home
+---
+
+<section class="hero">
+  <div class="container">
+    <span class="hero__eyebrow">Spring Boot · Quarkus · Python · OpenTelemetry · Grafana LGTM</span>
+    <h1 class="hero__title">{{ site.title }}</h1>
+    <p class="hero__lead">{{ site.description }}</p>
+    <div class="hero__cta">
+      <a class="btn btn--primary"
+         href="{{ '/docs/00-outline/' | relative_url }}">Start the tutorial →</a>
+      <a class="btn btn--secondary"
+         href="{{ '/docs/04-prerequisites-and-setup/' | relative_url }}">Set up the stack</a>
+      <a class="btn btn--secondary"
+         href="https://github.com/{{ site.github_username }}/{{ site.github_repo }}"
+         rel="noopener">View on GitHub ↗</a>
+    </div>
+  </div>
+</section>
+
+<section class="section-tight">
+  <div class="container">
+    <div class="stats">
+      <div class="stat"><span class="stat__value">🔭</span><span class="stat__label">One trace across every signal: traces, metrics, logs, baggage, and profiles</span></div>
+      <div class="stat"><span class="stat__value">🧩</span><span class="stat__label">The same e-commerce demo built three ways — Spring Boot, Quarkus, and Python</span></div>
+      <div class="stat"><span class="stat__value">📊</span><span class="stat__label">Correlated in Grafana via OpenTelemetry (Tempo + Mimir + Loki)</span></div>
+      <div class="stat"><span class="stat__value">🐳</span><span class="stat__label">The full Grafana LGTM stack, running locally — no managed cloud required</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <h2 class="section-heading">What this tutorial is</h2>
+    <p class="section-sub">
+      If you have run a distributed system, you know the failure mode: a request
+      crosses half a dozen services, and when it is slow or quietly wrong, the
+      logs you have are too sparse to explain it, too noisy to search, or costly
+      enough that you hesitate to add more. The thing that would actually help —
+      the request's full path, in order, across every service, with the time spent
+      in each hop and the cost of serializing data between them — is the thing you
+      almost never have.
+    </p>
+    <p class="section-sub">
+      This tutorial builds it, three times over. The same small e-commerce
+      domain is instrumented with <a href="https://opentelemetry.io/">OpenTelemetry</a>
+      on <strong>Spring Boot</strong>, <strong>Quarkus</strong>, and
+      <strong>Python</strong>, chapter by chapter, until a single request is a
+      trace you can read end to end — with metrics that show it in aggregate
+      and logs that correlate back to the same trace, all in a Grafana stack
+      you run yourself. Every chapter shows the same concept across all three
+      stacks side by side, so you can see what each runtime's instrumentation
+      actually buys you, and what it costs. It stays honest about the
+      trade-offs throughout: what auto-instrumentation gives you for free,
+      where you pay for it in overhead or noise, and when one hand-placed span
+      is worth more than a dozen automatic ones.
+    </p>
+
+    {%- comment -%}
+      Two-level navigation: the homepage shows one card per Part. Each Part
+      card links to its own page (the _parts collection) which lists that
+      part's chapters. New chapters appear under their part automatically;
+      new parts appear here just by adding a file to _parts/.
+    {%- endcomment -%}
+    <div class="cards">
+      {% assign parts_sorted = site.parts | sort: "order" %}
+      {% for part in parts_sorted %}
+      {% assign part_docs = site.docs | where: "part", part.part_name %}
+      <a class="card" href="{{ part.url | relative_url }}">
+        <div class="card__eyebrow">Part {{ part.order }}</div>
+        <h3 class="card__title">{{ part.title }}</h3>
+        {% if part.blurb %}
+        <p class="card__desc">{{ part.blurb }}</p>
+        {% endif %}
+        <div class="card__meta">
+          {% if part_docs.size > 0 %}
+            <span>{{ part_docs.size }} chapter{% if part_docs.size != 1 %}s{% endif %}</span>
+          {% else %}
+            <span>Coming soon</span>
+          {% endif %}
+          <span>Explore →</span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
