@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 420" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#cc0000"/></marker></defs>
+<rect x="40" y="60" width="350" height="320" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="52" y="80" font-size="12" font-weight="700" fill="#1d1d1d">stack/grafana/dashboards/</text>
+<rect x="70" y="100" width="290" height="56" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="215.0" y="126.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">service-overview.json</text>
+<text x="215.0" y="143.0" font-size="11.5" fill="#555555" text-anchor="middle">RED: rate, errors, duration</text>
+<rect x="70" y="170" width="290" height="56" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="215.0" y="196.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">infra-use.json</text>
+<text x="215.0" y="213.0" font-size="11.5" fill="#555555" text-anchor="middle">USE: utilization, saturation, errors</text>
+<rect x="70" y="240" width="290" height="56" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="215.0" y="266.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">service-graph.json</text>
+<text x="215.0" y="283.0" font-size="11.5" fill="#555555" text-anchor="middle">Tempo metrics-generator topology</text>
+<rect x="70" y="310" width="290" height="56" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="215.0" y="336.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">dashboards.yaml</text>
+<text x="215.0" y="353.0" font-size="11.5" fill="#555555" text-anchor="middle">provider: path + folder</text>
+<rect x="500" y="110" width="180" height="70" rx="9" fill="#fdecec" stroke="#ee0000" stroke-width="2"/>
+<text x="590.0" y="135.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Grafana</text>
+<text x="590.0" y="152.5" font-size="11.5" fill="#555555" text-anchor="middle">provisioning</text>
+<text x="590.0" y="167.5" font-size="11.5" fill="#555555" text-anchor="middle">dashboards API</text>
+<rect x="500" y="220" width="180" height="70" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="590.0" y="245.5" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">Rendered dashboard</text>
+<text x="590.0" y="262.5" font-size="11.5" fill="#dddddd" text-anchor="middle">on container start</text>
+<text x="590.0" y="277.5" font-size="11.5" fill="#dddddd" text-anchor="middle">no manual import</text>
+<path d="M360,338 L500,150" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="440.0" y="234.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">reads</text>
+<text x="440.0" y="234.0" font-size="11" fill="#b8650a" text-anchor="middle">reads</text>
+<path d="M590,180 L590,220" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="620.0" y="200.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">applies</text>
+<text x="620.0" y="200.0" font-size="11" fill="#b8650a" text-anchor="middle">applies</text>
+<text x="430" y="24" font-size="15" fill="#b8650a" text-anchor="middle" font-weight="700">Dashboards as code: JSON on disk, provisioned on startup</text>
+</svg>

@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 530" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#cc0000"/></marker></defs>
+<rect x="350" y="40" width="300" height="85" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="500.0" y="65.5" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">x-service-env anchor</text>
+<text x="500.0" y="82.5" font-size="11.5" fill="#dddddd" text-anchor="middle">DATABASE_URL, KAFKA_BOOTSTRAP,</text>
+<text x="500.0" y="97.5" font-size="11.5" fill="#dddddd" text-anchor="middle">OTEL_EXPORTER_OTLP_ENDPOINT</text>
+<text x="500.0" y="112.5" font-size="11.5" fill="#dddddd" text-anchor="middle">merged into every domain service</text>
+<rect x="60" y="165" width="260" height="80" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="190.0" y="188.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">profile: spring</text>
+<text x="190.0" y="205.0" font-size="11.5" fill="#555555" text-anchor="middle">&lt;&lt;: *service_env</text>
+<text x="190.0" y="220.0" font-size="11.5" fill="#555555" text-anchor="middle">order, review, inventory,</text>
+<text x="190.0" y="235.0" font-size="11.5" fill="#555555" text-anchor="middle">payment, shipping, notification</text>
+<rect x="370" y="165" width="260" height="80" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="500.0" y="188.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">profile: quarkus</text>
+<text x="500.0" y="205.0" font-size="11.5" fill="#555555" text-anchor="middle">&lt;&lt;: *service_env</text>
+<text x="500.0" y="220.0" font-size="11.5" fill="#555555" text-anchor="middle">order, review, inventory,</text>
+<text x="500.0" y="235.0" font-size="11.5" fill="#555555" text-anchor="middle">payment, shipping, notification</text>
+<rect x="680" y="165" width="260" height="80" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="810.0" y="188.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">profile: python</text>
+<text x="810.0" y="205.0" font-size="11.5" fill="#555555" text-anchor="middle">&lt;&lt;: *service_env</text>
+<text x="810.0" y="220.0" font-size="11.5" fill="#555555" text-anchor="middle">order, review, inventory,</text>
+<text x="810.0" y="235.0" font-size="11.5" fill="#555555" text-anchor="middle">payment, shipping, notification</text>
+<rect x="30" y="305" width="165" height="70" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="112.5" y="330.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">lgtm</text>
+<text x="112.5" y="347.5" font-size="11.5" fill="#555555" text-anchor="middle">Grafana:3000</text>
+<text x="112.5" y="362.5" font-size="11.5" fill="#555555" text-anchor="middle">OTLP 4317/4318</text>
+<rect x="215" y="305" width="165" height="70" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="297.5" y="330.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">pyroscope</text>
+<text x="297.5" y="347.5" font-size="11.5" fill="#555555" text-anchor="middle">profiles:4040</text>
+<text x="297.5" y="362.5" font-size="11.5" fill="#555555" text-anchor="middle">continuous profiling</text>
+<rect x="400" y="305" width="165" height="70" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="482.5" y="330.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">postgres</text>
+<text x="482.5" y="347.5" font-size="11.5" fill="#555555" text-anchor="middle">5432, db appdb</text>
+<text x="482.5" y="362.5" font-size="11.5" fill="#555555" text-anchor="middle">one shared schema</text>
+<rect x="585" y="305" width="165" height="70" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="667.5" y="330.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">kafka</text>
+<text x="667.5" y="347.5" font-size="11.5" fill="#555555" text-anchor="middle">9094 internal</text>
+<text x="667.5" y="362.5" font-size="11.5" fill="#555555" text-anchor="middle">KRaft, no ZooKeeper</text>
+<rect x="770" y="305" width="160" height="70" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="850.0" y="330.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">kcat</text>
+<text x="850.0" y="347.5" font-size="11.5" fill="#555555" text-anchor="middle">profile: tools</text>
+<text x="850.0" y="362.5" font-size="11.5" fill="#555555" text-anchor="middle">ad-hoc CLI only</text>
+<rect x="340" y="430" width="320" height="75" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="500.0" y="458.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">devcontainer (local dev)</text>
+<text x="500.0" y="475.0" font-size="11.5" fill="#555555" text-anchor="middle">Testcontainers / Quarkus Dev Services</text>
+<text x="500.0" y="490.0" font-size="11.5" fill="#555555" text-anchor="middle">ephemeral Postgres+Kafka, not this stack</text>
+<path d="M440,125 L180,165" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="280.0" y="141.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">env merge</text>
+<text x="280.0" y="141.0" font-size="11" fill="#b8650a" text-anchor="middle">env merge</text>
+<path d="M500,125 L500,165" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="540.0" y="143.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">env merge</text>
+<text x="540.0" y="143.0" font-size="11" fill="#b8650a" text-anchor="middle">env merge</text>
+<path d="M560,125 L810,165" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="715.0" y="141.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">env merge</text>
+<text x="715.0" y="141.0" font-size="11" fill="#b8650a" text-anchor="middle">env merge</text>
+<path d="M190,245 L460,305" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="335.0" y="265.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">postgres:5432</text>
+<text x="335.0" y="265.0" font-size="11" fill="#555" text-anchor="middle">postgres:5432</text>
+<path d="M500,245 L630,305" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="595.0" y="269.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">kafka:9094</text>
+<text x="595.0" y="269.0" font-size="11" fill="#555" text-anchor="middle">kafka:9094</text>
+<path d="M810,245 L130,305" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="410.0" y="245.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">lgtm:4318 (OTLP/HTTP)</text>
+<text x="410.0" y="245.0" font-size="11" fill="#555" text-anchor="middle">lgtm:4318 (OTLP/HTTP)</text>
+<path d="M770,340 L720,340" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="745.0" y="330.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">kcat -b kafka:9094</text>
+<text x="745.0" y="330.0" font-size="11" fill="#555" text-anchor="middle">kcat -b kafka:9094</text>
+<path d="M440,430 L450,375" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="535.0" y="412.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">bypasses stack/compose.yaml for tests</text>
+<text x="535.0" y="412.5" font-size="11" fill="#555" text-anchor="middle">bypasses stack/compose.yaml for tests</text>
+<text x="525" y="22" font-size="15" fill="#b8650a" text-anchor="middle" font-weight="700">stack/compose.yaml — one shared infra stack, per-language profiles</text>
+<text x="497" y="298" font-size="11" fill="#555555" text-anchor="middle">depends_on: condition: service_healthy (start_period gates cold starts)</text>
+</svg>

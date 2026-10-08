@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 460" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#cc0000"/></marker></defs>
+<rect x="30" y="60" width="390" height="180" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="42" y="80" font-size="12" font-weight="700" fill="#1d1d1d">Head sampling</text>
+<rect x="30" y="260" width="840" height="180" rx="12" fill="#fdf6ec" stroke="#ddd"/>
+<text x="42" y="280" font-size="12" font-weight="700" fill="#1d1d1d">Tail sampling</text>
+<rect x="60" y="100" width="150" height="60" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="135.0" y="120.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Service SDK</text>
+<text x="135.0" y="137.5" font-size="11.5" fill="#555555" text-anchor="middle">sampler: 10%</text>
+<text x="135.0" y="152.5" font-size="11.5" fill="#555555" text-anchor="middle">decision at span start</text>
+<rect x="250" y="100" width="140" height="60" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="320.0" y="128.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">90% dropped</text>
+<text x="320.0" y="145.0" font-size="11.5" fill="#555555" text-anchor="middle">before export</text>
+<rect x="60" y="180" width="330" height="40" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="225.0" y="205.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Cheap, but a slow error can be the 90% you lost</text>
+<rect x="60" y="300" width="150" height="60" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="135.0" y="320.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Services</text>
+<text x="135.0" y="337.5" font-size="11.5" fill="#555555" text-anchor="middle">export 100%</text>
+<text x="135.0" y="352.5" font-size="11.5" fill="#555555" text-anchor="middle">to the Collector</text>
+<rect x="250" y="300" width="170" height="60" rx="9" fill="#fdecec" stroke="#ee0000" stroke-width="2"/>
+<text x="335.0" y="320.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">tail_sampling processor</text>
+<text x="335.0" y="337.5" font-size="11.5" fill="#555555" text-anchor="middle">buffers full trace</text>
+<text x="335.0" y="352.5" font-size="11.5" fill="#555555" text-anchor="middle">decision_wait: 30s</text>
+<rect x="460" y="280" width="160" height="40" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="540.0" y="298.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">errors-policy</text>
+<text x="540.0" y="315.0" font-size="11.5" fill="#555555" text-anchor="middle">keep all ERROR</text>
+<rect x="460" y="325" width="160" height="40" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="540.0" y="343.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">slow-policy</text>
+<text x="540.0" y="360.0" font-size="11.5" fill="#555555" text-anchor="middle">keep &gt;1000ms</text>
+<rect x="460" y="370" width="160" height="40" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="540.0" y="388.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">critical-routes</text>
+<text x="540.0" y="405.0" font-size="11.5" fill="#555555" text-anchor="middle">keep /orders</text>
+<rect x="650" y="300" width="190" height="60" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="745.0" y="320.5" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">probabilistic-baseline</text>
+<text x="745.0" y="337.5" font-size="11.5" fill="#dddddd" text-anchor="middle">keep 5% of the rest</text>
+<text x="745.0" y="352.5" font-size="11.5" fill="#dddddd" text-anchor="middle">-&gt; exporters</text>
+<path d="M210,130 L250,130" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M210,330 L250,330" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M420,300 L460,300" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M420,330 L460,345" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M420,350 L460,390" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M620,300 L650,320" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M620,345 L650,330" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M620,390 L650,340" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="450" y="24" font-size="15" fill="#b8650a" text-anchor="middle" font-weight="700">Head sampling (per-service) vs. tail sampling (post-hoc, at the Collector)</text>
+</svg>

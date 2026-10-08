@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#cc0000"/></marker></defs>
+<rect x="300" y="20" width="300" height="60" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="450.0" y="48.0" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">Production incident</text>
+<text x="450.0" y="65.0" font-size="11.5" fill="#dddddd" text-anchor="middle">p99 latency spike, cause unknown</text>
+<rect x="70" y="150" width="320" height="60" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="230.0" y="178.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Dashboard</text>
+<text x="230.0" y="195.0" font-size="11.5" fill="#555555" text-anchor="middle">CPU, memory, request rate</text>
+<rect x="70" y="230" width="320" height="60" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="230.0" y="258.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Alert</text>
+<text x="230.0" y="275.0" font-size="11.5" fill="#555555" text-anchor="middle">error rate above a fixed threshold</text>
+<rect x="70" y="310" width="320" height="50" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="230.0" y="340.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Answers failure modes anticipated in advance</text>
+<rect x="490" y="150" width="320" height="60" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="650.0" y="178.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Trace</text>
+<text x="650.0" y="195.0" font-size="11.5" fill="#555555" text-anchor="middle">which span is slow, in which service</text>
+<rect x="490" y="230" width="320" height="60" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="650.0" y="265.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Metric and log joined by trace_id</text>
+<rect x="490" y="310" width="320" height="50" rx="9" fill="#fdecec" stroke="#ee0000" stroke-width="2"/>
+<text x="650.0" y="340.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Answers questions no one thought to ask</text>
+<path d="M400,80 L230,150" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M500,80 L650,150" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M230,210 L230,230" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M230,290 L230,310" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M650,210 L650,230" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M650,290 L650,310" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="230" y="128" font-size="14" fill="#1d1d1d" text-anchor="middle" font-weight="700">Monitoring</text>
+<text x="650" y="128" font-size="14" fill="#b8650a" text-anchor="middle" font-weight="700">Observability</text>
+</svg>

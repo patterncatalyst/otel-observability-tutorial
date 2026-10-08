@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1050 560" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#cc0000"/></marker></defs>
+<rect x="20" y="485" width="1010" height="55" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="32" y="505" font-size="12" font-weight="700" fill="#1d1d1d">Postgres appdb — orders, stock &amp; reservations, authorizations, shipments, notifications, reviews (one shared database)</text>
+<rect x="20" y="220" width="120" height="60" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="80.0" y="248.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Client</text>
+<text x="80.0" y="265.0" font-size="11.5" fill="#555555" text-anchor="middle">HTTP + GraphQL</text>
+<rect x="190" y="215" width="180" height="75" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="280.0" y="243.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">order-svc</text>
+<text x="280.0" y="260.0" font-size="11.5" fill="#555555" text-anchor="middle">REST :8080</text>
+<text x="280.0" y="275.0" font-size="11.5" fill="#555555" text-anchor="middle">orders table</text>
+<rect x="440" y="95" width="180" height="70" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="530.0" y="120.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">inventory-svc</text>
+<text x="530.0" y="137.5" font-size="11.5" fill="#555555" text-anchor="middle">gRPC :50051</text>
+<text x="530.0" y="152.5" font-size="11.5" fill="#555555" text-anchor="middle">stock, reservations</text>
+<rect x="440" y="335" width="180" height="70" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="530.0" y="360.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">payment-svc</text>
+<text x="530.0" y="377.5" font-size="11.5" fill="#555555" text-anchor="middle">gRPC :50052</text>
+<text x="530.0" y="392.5" font-size="11.5" fill="#555555" text-anchor="middle">authorizations</text>
+<rect x="670" y="218" width="160" height="70" rx="9" fill="#fdecec" stroke="#ee0000" stroke-width="2"/>
+<text x="750.0" y="243.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Kafka</text>
+<text x="750.0" y="260.5" font-size="11.5" fill="#555555" text-anchor="middle">order.placed</text>
+<text x="750.0" y="275.5" font-size="11.5" fill="#555555" text-anchor="middle">3 partitions</text>
+<rect x="870" y="120" width="160" height="70" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="950.0" y="145.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">shipping-svc</text>
+<text x="950.0" y="162.5" font-size="11.5" fill="#555555" text-anchor="middle">Kafka consumer</text>
+<text x="950.0" y="177.5" font-size="11.5" fill="#555555" text-anchor="middle">shipments table</text>
+<rect x="870" y="335" width="160" height="70" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="950.0" y="360.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">notification-svc</text>
+<text x="950.0" y="377.5" font-size="11.5" fill="#555555" text-anchor="middle">Kafka consumer</text>
+<text x="950.0" y="392.5" font-size="11.5" fill="#555555" text-anchor="middle">notifications table</text>
+<rect x="190" y="400" width="180" height="70" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="280.0" y="425.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">review-svc</text>
+<text x="280.0" y="442.5" font-size="11.5" fill="#555555" text-anchor="middle">GraphQL :8081</text>
+<text x="280.0" y="457.5" font-size="11.5" fill="#555555" text-anchor="middle">reviews table</text>
+<path d="M140,250 L190,250" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="165.0" y="240.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">POST /orders</text>
+<text x="165.0" y="240.0" font-size="11" fill="#555" text-anchor="middle">POST /orders</text>
+<path d="M370,235 L440,145" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="415.0" y="180.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">CheckStock, Reserve</text>
+<text x="415.0" y="180.0" font-size="11" fill="#555" text-anchor="middle">CheckStock, Reserve</text>
+<path d="M370,270 L440,355" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="405.0" y="326.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">Authorize</text>
+<text x="405.0" y="326.5" font-size="11" fill="#555" text-anchor="middle">Authorize</text>
+<path d="M370,252 L670,252" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="520.0" y="242.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">publish order.placed</text>
+<text x="520.0" y="242.0" font-size="11" fill="#555" text-anchor="middle">publish order.placed</text>
+<path d="M830,235 L870,165" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="870.0" y="194.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">consume</text>
+<text x="870.0" y="194.0" font-size="11" fill="#555" text-anchor="middle">consume</text>
+<path d="M830,268 L870,350" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="870.0" y="321.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">consume</text>
+<text x="870.0" y="321.0" font-size="11" fill="#555" text-anchor="middle">consume</text>
+<path d="M80,280 L190,420" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="125.0" y="360.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">GraphQL query</text>
+<text x="125.0" y="360.0" font-size="11" fill="#555" text-anchor="middle">GraphQL query</text>
+<text x="500" y="30" font-size="16" fill="#b8650a" text-anchor="middle" font-weight="700">order.placed: one request, six services</text>
+</svg>

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 340" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#cc0000"/></marker></defs>
+<rect x="30" y="20" width="180" height="70" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="120.0" y="53.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Spring Boot</text>
+<text x="120.0" y="70.0" font-size="11.5" fill="#555555" text-anchor="middle">order, review, ...</text>
+<rect x="30" y="110" width="180" height="70" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="120.0" y="143.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Quarkus</text>
+<text x="120.0" y="160.0" font-size="11.5" fill="#555555" text-anchor="middle">order, review, ...</text>
+<rect x="30" y="200" width="180" height="70" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="120.0" y="233.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Python</text>
+<text x="120.0" y="250.0" font-size="11.5" fill="#555555" text-anchor="middle">order, review, ...</text>
+<rect x="280" y="100" width="200" height="90" rx="9" fill="#fdecec" stroke="#ee0000" stroke-width="2"/>
+<text x="380.0" y="135.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">OpenTelemetry</text>
+<text x="380.0" y="152.5" font-size="11.5" fill="#555555" text-anchor="middle">API + SDK</text>
+<text x="380.0" y="167.5" font-size="11.5" fill="#555555" text-anchor="middle">same semantics, 3 runtimes</text>
+<rect x="540" y="100" width="190" height="90" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="635.0" y="135.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">OTel Collector</text>
+<text x="635.0" y="152.5" font-size="11.5" fill="#555555" text-anchor="middle">OTLP gRPC :4317</text>
+<text x="635.0" y="167.5" font-size="11.5" fill="#555555" text-anchor="middle">OTLP HTTP :4318</text>
+<rect x="790" y="20" width="180" height="260" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="880.0" y="118.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">LGTM stack</text>
+<text x="880.0" y="135.0" font-size="11.5" fill="#555555" text-anchor="middle">Tempo — traces</text>
+<text x="880.0" y="150.0" font-size="11.5" fill="#555555" text-anchor="middle">Mimir — metrics</text>
+<text x="880.0" y="165.0" font-size="11.5" fill="#555555" text-anchor="middle">Loki — logs</text>
+<text x="880.0" y="180.0" font-size="11.5" fill="#555555" text-anchor="middle">Pyroscope — profiles</text>
+<text x="880.0" y="195.0" font-size="11.5" fill="#555555" text-anchor="middle">Grafana — one UI</text>
+<path d="M210,55 L280,130" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M210,145 L280,145" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M210,235 L280,160" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M480,145 L540,145" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M730,145 L790,145" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="500" y="16" font-size="11" fill="#b8650a" text-anchor="middle" font-weight="700">Five signals: traces, metrics, logs, baggage, profiles</text>
+</svg>
