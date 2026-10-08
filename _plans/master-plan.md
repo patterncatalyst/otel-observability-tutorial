@@ -105,7 +105,7 @@ Signal-correlation showcase.
   engine; portable compose (otel-lgtm 0.35.0 + pyroscope 2.3.2 + postgres17 +
   kafka 4.2.2 + kafka-ui + kcat) + collector(+tail-sampling) + grafana
   provisioning; devcontainer; validators + vendored voice CI gate. NOT pushed yet.
-- [ ] Phase 2 — agnostic chapters
+- [DONE] Phase 2 — 15 agnostic chapters (Parts 0,1,3,4) authored, diagrams, Opus-validated PASS, deployed
 - [ ] Phase 3 — per-language demos + tabbed signal chapters (needs lgtm-python/spring-boot skills first)
 - [ ] Phase 4 — decks ; Phase 5 — dashboards ; Phase 6 — sunset/migration (gated)
 - Side workstream: create lgtm-python + lgtm-spring-boot skills (before Phase 3)

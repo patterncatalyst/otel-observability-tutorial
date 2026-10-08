@@ -5,7 +5,7 @@ part: "The demo application"
 description: "The one compose.yaml all three language tracks build on: service-name DNS, healthchecks, the x-service-env anchor, and per-language profiles."
 ---
 
-The previous chapter described six services and four protocols without saying a word about where any of it runs. That is because the infrastructure underneath the domain is shared across all three language implementations rather than reinvented per track. One `compose.yaml`, written once against the Compose Specification, provides Postgres, Kafka, and the full observability backend for the Spring Boot, Quarkus, and Python versions of the demo alike. That one file is the subject here: how its services are named and wired, what starts by default versus what a reader has to opt into, and how the same infrastructure definition produces three independently runnable language tracks without three copies of the Compose file.
+Chapter 5 described six services and four protocols without saying a word about where any of it runs. That is because the infrastructure underneath the domain is shared across all three language implementations rather than reinvented per track. One `compose.yaml`, written once against the Compose Specification, provides Postgres, Kafka, and the full observability backend for the Spring Boot, Quarkus, and Python versions of the demo alike. That one file is the subject here: how its services are named and wired, what starts by default versus what a reader has to opt into, and how the same infrastructure definition produces three independently runnable language tracks without three copies of the Compose file.
 
 ## One file, three language tracks
 
@@ -16,7 +16,7 @@ docker compose -f stack/compose.yaml up -d
 podman compose -f stack/compose.yaml up -d
 ```
 
-With no `--profile` flag, only the infrastructure services start: the Grafana LGTM stack, Pyroscope, Postgres, and Kafka. None of the six domain services from the previous chapter are considered at all — they live behind per-language Compose profiles (`spring`, `quarkus`, `python`) that only matter once their corresponding `services/<lang>/<domain>` directories exist with real build contexts. Bringing up a specific language track means adding the profile flag:
+With no `--profile` flag, only the infrastructure services start: the Grafana LGTM stack, Pyroscope, Postgres, and Kafka. None of the six domain services from Chapter 5 are considered at all — they live behind per-language Compose profiles (`spring`, `quarkus`, `python`) that only matter once their corresponding `services/<lang>/<domain>` directories exist with real build contexts. Bringing up a specific language track means adding the profile flag:
 
 ```bash
 docker compose -f stack/compose.yaml --profile quarkus up -d --build
@@ -30,7 +30,7 @@ Four infrastructure services come up with no profile selected:
 
 - **lgtm** — the Grafana `otel-lgtm` all-in-one image: Grafana itself, plus Tempo (traces), Loki (logs), Mimir (metrics), and an OpenTelemetry Collector, all in one container. It publishes Grafana's UI on `3000`, OTLP over gRPC on `4317` and over HTTP on `4318`, Mimir's Prometheus-compatible query endpoint on `9090`, Loki on `3100`, and Tempo on `3200`.
 - **pyroscope** — Grafana Pyroscope, the continuous-profiling backend, on `4040`. It is the fourth signal this tutorial covers, alongside traces, metrics, and logs.
-- **postgres** — a single Postgres 17 instance holding the shared `appdb` database described in the previous chapter, initialized from `stack/db/init/01-schema.sql` on first boot.
+- **postgres** — a single Postgres 17 instance holding the shared `appdb` database described in Chapter 5, initialized from `stack/db/init/01-schema.sql` on first boot.
 - **kafka** — a single-broker Kafka cluster running in KRaft mode, with no ZooKeeper dependency to stand up alongside it.
 
 A fifth service, **kcat**, is defined but does not start by default — it sits behind a `tools` Compose profile and exists purely as an ad-hoc CLI client for inspecting Kafka from outside any of the domain services. This stack has no web-based Kafka admin UI. Grafana is the only browser GUI the tutorial relies on; every other interaction with the infrastructure — listing topics, producing a test message, tailing a consumer — goes through the command line, either via `kcat` or via Kafka's own bundled scripts. This is a conscious choice: a second GUI for one piece of infrastructure adds a maintenance burden and a second thing to explain, where a handful of CLI invocations do the same job and generalize to how most engineers actually debug Kafka in production.
@@ -111,4 +111,4 @@ The distinction to keep straight is which Postgres and which Kafka a given workf
 
 Tearing the shared stack down is a plain `docker compose -f stack/compose.yaml down`, with a `-v` flag added when you also want to drop the Postgres and Kafka volumes and start the next run from a clean schema and an empty topic.
 
-With the infrastructure this tutorial sits on now established — what starts by default, how services find each other, and how the per-language profiles share one environment definition — the next chapter moves into the service skeletons themselves: the minimal, uninstrumented versions of order, inventory, payment, shipping, notification, and review that later chapters progressively instrument.
+With the infrastructure this tutorial sits on now established — what starts by default, how services find each other, and how the per-language profiles share one environment definition — Chapter 7 moves into the service skeletons themselves: the minimal, uninstrumented versions of order, inventory, payment, shipping, notification, and review that later chapters progressively instrument.

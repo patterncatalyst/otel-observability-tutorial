@@ -30,7 +30,7 @@ OTEL_TRACES_SAMPLER_ARG=0.1
 
 Tail sampling moves the decision to the opposite end of the trace's lifecycle. Every service exports every span, at full volume, exactly as if no sampling were happening at all. Instead, a Collector sits in the path, buffers each trace's spans as they arrive until the trace is judged complete, and only then applies a policy to decide whether that specific, now fully-formed trace gets forwarded to the backend or dropped. Because the decision happens after the trace is whole, it can be based on what actually happened during the request: did it error, was it slow, did it touch a specific endpoint, rather than a coin flip made in ignorance of all of that.
 
-This stack's tail-sampling configuration lives in `stack/otelcol/config.tail-sampling.yaml`, a layer on top of the base Collector config from the previous chapter, swapped in by changing which file is mounted into the Collector container. The receiver and the batch/resource processors are unchanged; the new piece is the `tail_sampling` processor itself, along with a larger `memory_limiter` to match:
+This stack's tail-sampling configuration lives in `stack/otelcol/config.tail-sampling.yaml`, a layer on top of the base Collector config from Chapter 19, swapped in by changing which file is mounted into the Collector container. The receiver and the batch/resource processors are unchanged; the new piece is the `tail_sampling` processor itself, along with a larger `memory_limiter` to match:
 
 ```yaml
 processors:
