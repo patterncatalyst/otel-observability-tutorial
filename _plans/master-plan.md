@@ -106,6 +106,7 @@ Signal-correlation showcase.
   kafka 4.2.2 + kafka-ui + kcat) + collector(+tail-sampling) + grafana
   provisioning; devcontainer; validators + vendored voice CI gate. NOT pushed yet.
 - [DONE] Phase 2 — 15 agnostic chapters (Parts 0,1,3,4) authored, diagrams, Opus-validated PASS, deployed
-- [ ] Phase 3 — per-language demos + tabbed signal chapters (needs lgtm-python/spring-boot skills first)
+- [DONE] Phase 3a Spring + 3b Quarkus/Python service sets — all 5 signals verified live for all 3 languages (local-only, not pushed)
+- [ ] Phase 3c — tabbed signal chapters (04,07,08-14,17)
 - [ ] Phase 4 — decks ; Phase 5 — dashboards ; Phase 6 — sunset/migration (gated)
 - Side workstream: create lgtm-python + lgtm-spring-boot skills (before Phase 3)
