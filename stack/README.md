@@ -23,7 +23,7 @@ With no `--profile` flag, only the infra services start:
 | `pyroscope`  | Continuous profiling backend               |
 | `postgres`   | One shared `appdb`                         |
 | `kafka`      | Single KRaft broker (no ZooKeeper)         |
-| `kafka-ui`   | Web UI for the Kafka cluster               |
+| `kcat`       | CLI Kafka client (`tools` profile)         |
 
 Once Phase 3 adds the domain services, bring up a specific language track
 with `--profile`:
@@ -46,7 +46,7 @@ drop the Postgres/Kafka volumes).
 |-----------------------|-----------------------------------|
 | Grafana                | http://localhost:3000            |
 | Pyroscope UI            | http://localhost:4040            |
-| Kafka UI                | http://localhost:8090            |
+| Kafka broker            | localhost:9092 (inspect with kcat) |
 | OTLP (gRPC / HTTP)       | localhost:4317 / localhost:4318  |
 | Mimir / Prometheus query | http://localhost:9090            |
 | Loki                     | http://localhost:3100            |
@@ -86,9 +86,6 @@ docker compose -f stack/compose.yaml exec kcat kcat -b kafka:9094 -t order.place
 # Inspect a topic's config/partitions
 docker compose -f stack/compose.yaml exec kcat kcat -b kafka:9094 -L -t order.placed
 ```
-
-(`kafka-ui` at http://localhost:8090 covers the same ground with a browser
-UI — topics, messages, consumer groups — if you'd rather click than type.)
 
 ## Swapping in tail sampling
 

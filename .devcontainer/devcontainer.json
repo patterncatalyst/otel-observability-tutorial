@@ -39,11 +39,10 @@
   // (e.g. to look at traces in Grafana across services), not for routine
   // unit/integration test runs.
 
-  "forwardPorts": [3000, 4040, 8090],
+  "forwardPorts": [3000, 4040],
   "portsAttributes": {
     "3000": { "label": "Grafana" },
-    "4040": { "label": "Pyroscope" },
-    "8090": { "label": "Kafka UI" }
+    "4040": { "label": "Pyroscope" }
   },
 
   "postCreateCommand": "bundle install",

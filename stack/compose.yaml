@@ -8,7 +8,7 @@
 #   podman compose -f stack/compose.yaml up -d
 #
 # With NO profile selected, only the infra services start: lgtm, pyroscope,
-# postgres, kafka, kafka-ui. The six domain services (order, review,
+# postgres, kafka. (Use the `tools` profile for kcat.) The six domain services (order, review,
 # inventory, payment, shipping, notification) are scaffolded below under
 # per-language profiles (`spring`, `quarkus`, `python`) but their build
 # contexts (services/<lang>/<domain>) don't exist yet — Phase 3 of this
@@ -19,7 +19,7 @@
 # Edges (from the host), once Phase 3 lands:
 #   Grafana UI   : http://localhost:3000
 #   Pyroscope UI : http://localhost:4040
-#   Kafka UI     : http://localhost:8090
+#   Kafka        : localhost:9092  (inspect with kcat — `tools` profile)
 #   Order REST   : http://localhost:8080        (POST /orders, GET /orders/{id})
 #   Review GQL   : http://localhost:8081/graphql
 #
@@ -154,18 +154,6 @@ services:
       timeout: 5s
       retries: 12
       start_period: 30s
-
-  kafka-ui:
-    image: docker.io/provectuslabs/kafka-ui:v0.7.2
-    ports:
-      - "8090:8080"
-    environment:
-      KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9094
-      DYNAMIC_CONFIG_ENABLED: "true"
-    depends_on:
-      kafka:
-        condition: service_healthy
 
   # --- kcat: ad-hoc produce/consume/inspect from the CLI -------------------
   # Not started by default (`tools` profile). See stack/README.md for usage.
