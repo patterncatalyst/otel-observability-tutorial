@@ -1,0 +1,20 @@
+The otel-observability-tutorial stack ({{ .Values.language }} track) is deploying
+to namespace "{{ .Release.Namespace }}".
+
+Watch it come up:
+  oc get pods -n {{ .Release.Namespace }} -w
+
+Infrastructure (postgres, kafka, lgtm, pyroscope) starts first; the six domain
+services become Ready once their probes pass. External entry points are
+Routes:
+  Grafana UI :  oc get route lgtm-grafana -n {{ .Release.Namespace }} -o jsonpath='{.spec.host}'
+  order REST :  oc get route order        -n {{ .Release.Namespace }} -o jsonpath='{.spec.host}'
+  review GQL :  oc get route review       -n {{ .Release.Namespace }} -o jsonpath='{.spec.host}'
+
+Drive load against the Route host instead of localhost, e.g.:
+  ORDER_URL="https://$(oc get route order -n {{ .Release.Namespace }} -o jsonpath='{.spec.host}')" \
+  REVIEW_URL="https://$(oc get route review -n {{ .Release.Namespace }} -o jsonpath='{.spec.host}')" \
+    demos/drive-load.sh 10
+
+Everything else (inventory, payment, postgres, kafka, pyroscope) is
+ClusterIP-only, reachable in-cluster.

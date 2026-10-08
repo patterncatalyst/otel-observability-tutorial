@@ -1,0 +1,18 @@
+# ClusterIP "pyroscope" — the DNS name both the Grafana datasource
+# (templates/configmap-grafana-datasources.yaml) and every app Deployment's
+# PYROSCOPE_ADDRESS (templates/configmap-app-env.yaml) point at.
+apiVersion: v1
+kind: Service
+metadata:
+  name: pyroscope
+  labels:
+    app.kubernetes.io/name: pyroscope
+    {{- include "otel-observability.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: pyroscope
+  ports:
+    - name: http
+      port: 4040
+      targetPort: 4040

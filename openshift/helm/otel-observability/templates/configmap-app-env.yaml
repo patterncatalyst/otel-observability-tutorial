@@ -1,0 +1,22 @@
+{{- $dns := include "otel-observability.dns" . -}}
+# Shared env contract for the six domain services — the Helm/OpenShift
+# equivalent of stack/compose.yaml's `x-service-env` anchor. Every address
+# here is built from the release namespace so the chart is portable to
+# whatever namespace a reader creates with `oc new-project`, rather than
+# hardcoded to one name.
+#
+# DATABASE_URL is deliberately NOT here — see templates/secret-db.yaml.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-observability-app-env
+  labels:
+    {{- include "otel-observability.labels" . | nindent 4 }}
+data:
+  KAFKA_BOOTSTRAP: "kafka.{{ $dns }}:9092"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://lgtm.{{ $dns }}:4318"
+  OTEL_EXPORTER_OTLP_PROTOCOL: {{ .Values.env.otlpProtocol | quote }}
+  PROPAGATE_KAFKA_CONTEXT: {{ .Values.env.propagateKafkaContext | quote }}
+  PYROSCOPE_ADDRESS: "http://pyroscope.{{ $dns }}:4040"
+  DEPLOY_ENV: {{ .Values.env.deployEnv | quote }}
+  SERVICE_VERSION: {{ .Values.env.serviceVersion | quote }}

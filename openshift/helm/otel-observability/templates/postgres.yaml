@@ -1,0 +1,179 @@
+# Shared Postgres (one db, `appdb`, all six domains — see
+# stack/db/init/01-schema.sql). Plain StatefulSet, not an operator-managed
+# CloudNativePG Cluster CR: no Postgres operator is assumed to be installed
+# on the target cluster. Runs under the otel-observability-infra
+# ServiceAccount (nonroot-v2 SCC) so uid 70 — this image's own user — is
+# actually permitted; restricted-v2 would otherwise assign a random UID the
+# upstream postgres image's data-dir ownership doesn't expect.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-initdb
+  labels:
+    app.kubernetes.io/name: postgres
+    {{- include "otel-observability.labels" . | nindent 4 }}
+data:
+  01-schema.sql: |
+    -- Ported verbatim from stack/db/init/01-schema.sql — one table per
+    -- domain, in one shared database, plus the seed rows the demo load
+    -- generator (demos/drive-load.sh) depends on.
+    CREATE TABLE IF NOT EXISTS orders (
+        order_id     TEXT PRIMARY KEY,
+        customer_id  TEXT NOT NULL,
+        sku          TEXT NOT NULL,
+        quantity     INT  NOT NULL,
+        amount_cents BIGINT NOT NULL,
+        status       TEXT NOT NULL,
+        created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+
+    CREATE TABLE IF NOT EXISTS stock (
+        sku      TEXT PRIMARY KEY,
+        on_hand  INT  NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS reservations (
+        reservation_id TEXT PRIMARY KEY,
+        order_id       TEXT NOT NULL,
+        sku            TEXT NOT NULL,
+        quantity       INT  NOT NULL,
+        created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+    INSERT INTO stock (sku, on_hand) VALUES
+        ('WIDGET-001', 1000),
+        ('GADGET-002', 500),
+        ('GIZMO-003',  50)
+    ON CONFLICT (sku) DO NOTHING;
+
+    CREATE TABLE IF NOT EXISTS authorizations (
+        authorization_id TEXT PRIMARY KEY,
+        order_id         TEXT UNIQUE NOT NULL,
+        customer_id      TEXT NOT NULL,
+        amount_cents     BIGINT NOT NULL,
+        authorized       BOOLEAN NOT NULL,
+        created_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+
+    CREATE TABLE IF NOT EXISTS shipments (
+        shipment_id TEXT PRIMARY KEY,
+        order_id    TEXT NOT NULL,
+        sku         TEXT NOT NULL,
+        quantity    INT  NOT NULL,
+        status      TEXT NOT NULL,
+        created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+
+    CREATE TABLE IF NOT EXISTS notifications (
+        notification_id TEXT PRIMARY KEY,
+        order_id        TEXT NOT NULL,
+        channel         TEXT NOT NULL,
+        status          TEXT NOT NULL,
+        created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+
+    CREATE TABLE IF NOT EXISTS reviews (
+        review_id TEXT PRIMARY KEY,
+        sku       TEXT NOT NULL,
+        rating    INT  NOT NULL,
+        body      TEXT NOT NULL
+    );
+    INSERT INTO reviews (review_id, sku, rating, body) VALUES
+        ('r1', 'WIDGET-001', 5, 'Excellent widget, ships fast.'),
+        ('r2', 'WIDGET-001', 4, 'Solid, would buy again.'),
+        ('r3', 'GADGET-002', 3, 'Does the job.')
+    ON CONFLICT (review_id) DO NOTHING;
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  labels:
+    app.kubernetes.io/name: postgres
+    {{- include "otel-observability.labels" . | nindent 4 }}
+spec:
+  clusterIP: None
+  selector:
+    app.kubernetes.io/name: postgres
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: postgres
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  labels:
+    app.kubernetes.io/name: postgres
+    {{- include "otel-observability.labels" . | nindent 4 }}
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: postgres
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: postgres
+        {{- include "otel-observability.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ .Values.infra.serviceAccountName }}
+      securityContext:
+        fsGroup: 70
+      containers:
+        - name: postgres
+          image: {{ .Values.postgres.image | quote }}
+          imagePullPolicy: IfNotPresent
+          args: ["postgres", "-c", "log_statement=all", "-c", "shared_buffers=128MB"]
+          ports:
+            - name: postgres
+              containerPort: 5432
+          env:
+            - name: PGDATA
+              value: "/var/lib/postgresql/data/pgdata"
+            - name: POSTGRES_DB
+              value: {{ .Values.postgres.database | quote }}
+            - name: POSTGRES_USER
+              value: {{ .Values.postgres.username | quote }}
+            - name: POSTGRES_PASSWORD
+              value: {{ .Values.postgres.password | quote }}
+            - name: POSTGRES_INITDB_ARGS
+              value: "--encoding=UTF8 --locale=C"
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+            - name: postgres-initdb
+              mountPath: /docker-entrypoint-initdb.d
+          readinessProbe:
+            exec: { command: ["pg_isready", "-U", {{ .Values.postgres.username | quote }}, "-d", {{ .Values.postgres.database | quote }}] }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            exec: { command: ["pg_isready", "-U", {{ .Values.postgres.username | quote }}, "-d", {{ .Values.postgres.database | quote }}] }
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 6
+          resources:
+            requests: { cpu: 250m, memory: 384Mi }
+            limits: { cpu: 1000m, memory: 768Mi }
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 70
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
+      volumes:
+        - name: postgres-initdb
+          configMap:
+            name: postgres-initdb
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: {{ .Values.postgres.storage | quote }}

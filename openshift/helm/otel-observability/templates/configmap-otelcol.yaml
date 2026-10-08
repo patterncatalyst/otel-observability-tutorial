@@ -1,0 +1,79 @@
+# The OpenTelemetry Collector configuration mounted into the lgtm all-in-one
+# container, ported from stack/otelcol/config.yaml with one change: the
+# `resource` processor's deployment.environment value is "openshift-crc"
+# instead of "local", matching this chart's `env.deployEnv` default — see
+# _docs/23-production-checklist.md on resource attributes promoting
+# telemetry across environments. Everything else — receivers, the
+# memory_limiter/resource/batch processor floor, the three signal exporters
+# pointed at Tempo/Mimir/Loki over the all-in-one image's internal
+# localhost ports — is unchanged from the base chapter config.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-observability-otelcol-config
+  labels:
+    {{- include "otel-observability.labels" . | nindent 4 }}
+data:
+  otelcol-config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+
+    processors:
+      memory_limiter:
+        check_interval: 1s
+        limit_mib: 512
+        spike_limit_mib: 128
+
+      batch:
+        timeout: 200ms
+        send_batch_size: 8192
+
+      resource:
+        attributes:
+          - key: deployment.environment
+            value: {{ .Values.env.deployEnv | quote }}
+            action: upsert
+
+    exporters:
+      otlphttp/tempo:
+        endpoint: http://localhost:4418
+        tls:
+          insecure: true
+
+      prometheusremotewrite:
+        endpoint: http://localhost:9090/api/v1/write
+        tls:
+          insecure: true
+
+      otlphttp/loki:
+        endpoint: http://localhost:3100/otlp
+        tls:
+          insecure: true
+
+      debug:
+        verbosity: basic
+        sampling_initial: 5
+        sampling_thereafter: 100
+
+    service:
+      telemetry:
+        logs:
+          level: info
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, resource, batch]
+          exporters: [otlphttp/tempo]
+        metrics:
+          receivers: [otlp]
+          processors: [memory_limiter, resource, batch]
+          exporters: [prometheusremotewrite]
+        logs:
+          receivers: [otlp]
+          processors: [memory_limiter, resource, batch]
+          exporters: [otlphttp/loki]

@@ -1,0 +1,24 @@
+apiVersion: v2
+name: otel-observability
+description: >-
+  The OpenTelemetry Observability Tutorial's shared infrastructure (the
+  grafana/otel-lgtm all-in-one backend, Pyroscope, Postgres, and a
+  single-broker KRaft Kafka) plus the six domain services for one language
+  track, deployed to OpenShift. The OpenShift counterpart to
+  stack/compose.yaml — same services, same shared env contract
+  (OTEL_EXPORTER_OTLP_ENDPOINT, DATABASE_URL, KAFKA_BOOTSTRAP,
+  PROPAGATE_KAFKA_CONTEXT, PYROSCOPE_ADDRESS), reshaped for Routes, the
+  internal image registry, and OpenShift Security Context Constraints
+  instead of docker/podman compose.
+type: application
+version: 1.0.0
+appVersion: "1.0"
+keywords:
+  - opentelemetry
+  - observability
+  - grafana
+  - pyroscope
+  - openshift
+  - kafka
+maintainers:
+  - name: patterncatalyst

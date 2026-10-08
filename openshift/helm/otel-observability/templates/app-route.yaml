@@ -1,0 +1,27 @@
+{{- $root := . -}}
+{{- range $name, $svc := .Values.services }}
+{{- if $svc.route }}
+---
+# OpenShift Route — the platform-native ingress, replacing compose's
+# `8080:8080`/`8081:8081` host port mappings for the order (REST) and review
+# (GraphQL) services. Edge TLS terminates at the cluster's router; plain
+# HTTP is redirected to HTTPS.
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: {{ $name }}
+  labels:
+    app.kubernetes.io/name: {{ $name }}
+    {{- include "otel-observability.labels" $root | nindent 4 }}
+spec:
+  to:
+    kind: Service
+    name: {{ $name }}
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+{{- end }}
+{{- end }}

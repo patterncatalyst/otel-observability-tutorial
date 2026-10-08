@@ -1,0 +1,23 @@
+# ClusterIP "lgtm" — the in-cluster DNS name every app Deployment's
+# OTEL_EXPORTER_OTLP_ENDPOINT points at (templates/configmap-app-env.yaml).
+apiVersion: v1
+kind: Service
+metadata:
+  name: lgtm
+  labels:
+    app.kubernetes.io/name: lgtm
+    {{- include "otel-observability.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: lgtm
+  ports:
+    - name: grpc-otlp
+      port: 4317
+      targetPort: 4317
+    - name: otlp-http
+      port: 4318
+      targetPort: 4318
+    - name: grafana
+      port: 3000
+      targetPort: 3000

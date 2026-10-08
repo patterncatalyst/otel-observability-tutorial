@@ -1,0 +1,98 @@
+# Pre-provisioned Grafana datasources for the LGTM + Pyroscope stack, ported
+# from stack/grafana/datasources.yaml unchanged except for the Pyroscope
+# datasource's URL, which uses this chart's in-cluster Service DNS
+# (pyroscope, same namespace) instead of the compose service name. Mounted
+# as "zz-..." in lgtm-deployment.yaml so it sorts (and loads) after the
+# otel-lgtm image's own built-in datasources.yaml — Grafana provisions every
+# *.yaml in the directory and the last one processed wins on a UID
+# collision, so this file's Tempo/Pyroscope UIDs must load last to avoid
+# being silently clobbered by the image's internal defaults.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-observability-grafana-datasources
+  labels:
+    {{- include "otel-observability.labels" . | nindent 4 }}
+data:
+  zz-tutorial-datasources.yaml: |
+    apiVersion: 1
+
+    datasources:
+      - name: Tempo
+        type: tempo
+        access: proxy
+        url: http://localhost:3200
+        uid: tempo
+        isDefault: false
+        editable: true
+        jsonData:
+          tracesToLogsV2:
+            datasourceUid: loki
+            spanStartTimeShift: -5m
+            spanEndTimeShift: 5m
+            tags:
+              - key: service.name
+                value: service_name
+            filterByTraceID: true
+            filterBySpanID: false
+          tracesToMetrics:
+            datasourceUid: prometheus
+            spanStartTimeShift: -2m
+            spanEndTimeShift: 2m
+            tags:
+              - key: service.name
+                value: service
+            queries:
+              - name: 'Request rate'
+                query: 'sum(rate(http_server_duration_milliseconds_count{$$__tags}[5m]))'
+              - name: 'Error rate'
+                query: 'sum(rate(http_server_duration_milliseconds_count{$$__tags,error="true"}[5m]))'
+          tracesToProfiles:
+            datasourceUid: pyroscope
+            tags:
+              - key: service.name
+                value: service_name
+            profileTypeId: 'process_cpu:cpu:nanoseconds:cpu:nanoseconds'
+          serviceMap:
+            datasourceUid: prometheus
+          nodeGraph:
+            enabled: true
+          search:
+            hide: false
+
+      - name: Loki
+        type: loki
+        access: proxy
+        url: http://localhost:3100
+        uid: loki
+        isDefault: false
+        editable: true
+        jsonData:
+          derivedFields:
+            - datasourceUid: tempo
+              matcherType: label
+              matcherRegex: trace_id
+              name: trace_id
+              url: '$${__value.raw}'
+              urlDisplayLabel: 'View trace in Tempo'
+
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://localhost:9090
+        uid: prometheus
+        isDefault: true
+        editable: true
+        jsonData:
+          timeInterval: "15s"
+          exemplarTraceIdDestinations:
+            - name: trace_id
+              datasourceUid: tempo
+
+      - name: Pyroscope
+        type: grafana-pyroscope-datasource
+        access: proxy
+        url: http://pyroscope:4040
+        uid: pyroscope
+        isDefault: false
+        editable: true

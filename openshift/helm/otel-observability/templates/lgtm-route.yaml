@@ -1,0 +1,22 @@
+# Edge Route to the Grafana UI (port 3000) — the platform-native ingress,
+# replacing compose's `3000:3000` host port mapping. Grafana runs with
+# anonymous Admin access (GF_AUTH_ANONYMOUS_* in lgtm-deployment.yaml, ported
+# unchanged from stack/compose.yaml) rather than a login flow, appropriate
+# for a local/tutorial build, not production.
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: lgtm-grafana
+  labels:
+    app.kubernetes.io/name: lgtm
+    {{- include "otel-observability.labels" . | nindent 4 }}
+spec:
+  to:
+    kind: Service
+    name: lgtm
+    weight: 100
+  port:
+    targetPort: grafana
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

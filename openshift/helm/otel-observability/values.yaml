@@ -1,0 +1,135 @@
+# values.yaml — the knobs for deploying the tutorial's shared stack and
+# domain services to OpenShift.
+#
+# The six domain services are described declaratively in `services` below;
+# templates/app-deployment.yaml, app-service.yaml, and app-route.yaml range
+# over this map, so the whole topology is one template driven by data —
+# the same idiom stack/compose.yaml uses with its per-language `profiles`
+# and the `x-service-env` anchor.
+#
+# SCOPE: this chart deploys one language track at a time (`language:`
+# below), matching stack/compose.yaml's `--profile spring|quarkus|python`
+# switch. `python` is the default because its images are the ones verified
+# end to end against a live cluster elsewhere in this project (see
+# project_datamesh_python_openshift notes); pointing `language` at `spring`
+# or `quarkus` only changes the image repository name each service
+# resolves to — the Deployment/Service/Route shape, env contract, and SCC
+# story are identical across all three tracks, since all three Containerfiles
+# already build to the same `USER 1001:0` / restricted-v2-compatible
+# convention (see stack/compose.yaml's per-language service blocks).
+language: python
+
+# Container image settings. On OpenShift the natural home is the integrated
+# registry; `openshift/build-and-push.sh` builds each
+# services/<language>/<domain>/Containerfile and pushes it there under the
+# exact ref this template composes:
+#   <registry>/otel-tutorial-<domain>-<language>:<tag>
+# Override `registry` to point at an external registry (Quay, etc.) instead.
+image:
+  registry: "image-registry.openshift-image-registry.svc:5000/otel-observability"
+  tag: "v1"
+  pullPolicy: IfNotPresent
+
+# Dev-only Postgres credential, rendered into a Secret (templates/secret-db.yaml)
+# as a single DATABASE_URL DSN — the same env var name and connection-string
+# shape stack/compose.yaml's `x-service-env` anchor uses, so no application
+# code changes between compose and this chart.
+# PRODUCTION: replace with a SealedSecret / ExternalSecret — never plaintext
+# Postgres credentials committed to a values file.
+postgres:
+  username: "appuser"
+  password: "apppass_dev_only"
+  database: "appdb"
+  image: "docker.io/library/postgres:17-alpine"
+  storage: "2Gi"
+
+kafka:
+  image: "docker.io/apache/kafka:4.2.2"
+  clusterId: "MkU3OEVBNTcwNTJENDM2Qk"
+  storage: "2Gi"
+
+# The grafana/otel-lgtm all-in-one image: OTel Collector + Tempo + Loki +
+# Mimir + Grafana in one container, pinned to the same tag
+# stack/compose.yaml runs locally.
+lgtm:
+  image: "docker.io/grafana/otel-lgtm:0.35.0"
+
+# Grafana Pyroscope — the fourth signal (continuous profiling), same image
+# stack/compose.yaml runs locally. No PVC: the compose stack doesn't persist
+# profile data across restarts either, so this chart keeps that ephemeral
+# behavior rather than adding storage compose doesn't have.
+pyroscope:
+  image: "docker.io/grafana/pyroscope:2.3.2"
+
+# ServiceAccount for the infra StatefulSets (postgres, kafka). Their upstream
+# images require specific non-root UIDs (postgres 70, kafka 1000), which
+# OpenShift's default `restricted-v2` SCC will not allow — it assigns a
+# random UID from the namespace range instead. Binding this SA to
+# `nonroot-v2` lets those two pods keep their own UID. The six app pods and
+# Pyroscope need no such grant: the app images already run as `USER 1001:0`
+# (arbitrary UID, group 0), which is exactly what restricted-v2 expects, and
+# Pyroscope's upstream image is built the same arbitrary-UID-compatible way.
+infra:
+  serviceAccountName: "otel-observability-infra"
+  scc: "nonroot-v2"
+
+# The grafana/otel-lgtm image's bundled Grafana/Tempo/Loki/Mimir run as the
+# image's own (effectively root) user and write to directories it owns;
+# under restricted-v2's randomly assigned UID, Grafana can never write its
+# data dir and never binds :3000. Bind a dedicated SA to the `anyuid` SCC so
+# this one pod runs as the image's intended UID — scoped to this single
+# backend, not a namespace-wide grant. (Same finding, same fix, as the
+# datamesh-reference-arch-python OpenShift appendix's `lgtm` ServiceAccount.)
+lgtmServiceAccountName: "otel-observability-lgtm"
+
+# The six domain services, described as data. `probe` selects the readiness/
+# liveness shape: "http" for the two services with REST/GraphQL ports,
+# "grpc" for the two internal gRPC services, "none" for the two Kafka-only
+# workers (shipping, notification) that expose no port at all — mirrors
+# shipping/notification's Containerfiles, which have no EXPOSE and no health
+# route (see services/python/shipping/Containerfile,
+# services/python/notification/Containerfile).
+services:
+  order:
+    port: 8080
+    probe: http
+    healthPath: /health
+    route: true
+    # order calls inventory and payment over gRPC — see INVENTORY_ADDR/
+    # PAYMENT_ADDR wiring in templates/app-deployment.yaml.
+    callsInventoryPayment: true
+  review:
+    port: 8081
+    probe: http
+    healthPath: /health
+    route: true
+  inventory:
+    port: 50051
+    probe: grpc
+  payment:
+    port: 50052
+    probe: grpc
+  shipping:
+    probe: none
+    kafka: true
+  notification:
+    probe: none
+    kafka: true
+
+# Resource requests/limits for the six app Deployments. One tier is enough
+# for a tutorial-scale demo; split further if a given service turns out to
+# need more under load.
+resources:
+  requests: { cpu: 100m, memory: 192Mi }
+  limits: { cpu: 500m, memory: 512Mi }
+
+# Shared observability env, mirroring stack/compose.yaml's `x-service-env`
+# anchor exactly by name: OTEL_EXPORTER_OTLP_ENDPOINT, KAFKA_BOOTSTRAP,
+# PROPAGATE_KAFKA_CONTEXT, PYROSCOPE_ADDRESS. DATABASE_URL is deliberately
+# NOT here — it is rendered into the Secret in templates/secret-db.yaml
+# instead, since it carries the Postgres credential.
+env:
+  otlpProtocol: "http/protobuf"
+  propagateKafkaContext: "true"
+  deployEnv: "openshift-crc"
+  serviceVersion: "v1"

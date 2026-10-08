@@ -1,0 +1,119 @@
+{{- $root := . -}}
+{{- $dns := include "otel-observability.dns" . -}}
+{{- range $name, $svc := .Values.services }}
+---
+# {{ $name }}-{{ $root.Values.language }} — {{ if $svc.route }}externally exposed via Route; {{ end }}{{ if eq $svc.probe "http" }}HTTP health probe on {{ $svc.healthPath }}; {{ else if eq $svc.probe "grpc" }}internal gRPC, TCP-socket probe; {{ else }}Kafka consumer worker, no port, no probe; {{ end }}{{ if $svc.kafka }}graceful-shutdown window for in-flight Kafka work.{{ end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  labels:
+    app.kubernetes.io/name: {{ $name }}
+    {{- include "otel-observability.labels" $root | nindent 4 }}
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ $name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ $name }}
+        {{- include "otel-observability.labels" $root | nindent 8 }}
+    spec:
+      {{- if $svc.kafka }}
+      # Let an in-flight produce/consume finish before SIGKILL — same
+      # graceful-shutdown idiom the modernization and datamesh OpenShift
+      # appendices both use for Kafka-attached workloads.
+      terminationGracePeriodSeconds: 45
+      {{- end }}
+      containers:
+        - name: {{ $name }}
+          image: {{ include "otel-observability.image" (list $root $name) | quote }}
+          imagePullPolicy: {{ $root.Values.image.pullPolicy }}
+          {{- if $svc.port }}
+          ports:
+            - name: {{ if eq $svc.probe "http" }}http{{ else }}grpc{{ end }}
+              containerPort: {{ $svc.port }}
+          {{- end }}
+          envFrom:
+            - configMapRef:
+                name: otel-observability-app-env
+            - secretRef:
+                name: otel-observability-db
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: "{{ $name }}-{{ $root.Values.language }}"
+            {{- if $svc.callsInventoryPayment }}
+            # order's two gRPC dependents — see stack/compose.yaml's
+            # INVENTORY_ADDR/PAYMENT_ADDR on order-<lang>.
+            - name: INVENTORY_ADDR
+              value: "inventory.{{ $dns }}:{{ (index $root.Values.services "inventory").port }}"
+            - name: PAYMENT_ADDR
+              value: "payment.{{ $dns }}:{{ (index $root.Values.services "payment").port }}"
+            {{- end }}
+          {{- if $svc.kafka }}
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sh", "-c", "sleep 10"]
+          {{- end }}
+          {{- if eq $svc.probe "http" }}
+          startupProbe:
+            httpGet: { path: {{ $svc.healthPath }}, port: http }
+            initialDelaySeconds: 5
+            periodSeconds: 2
+            failureThreshold: 30
+          readinessProbe:
+            httpGet: { path: {{ $svc.healthPath }}, port: http }
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet: { path: {{ $svc.healthPath }}, port: http }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+          {{- else if eq $svc.probe "grpc" }}
+          startupProbe:
+            tcpSocket: { port: grpc }
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            tcpSocket: { port: grpc }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            tcpSocket: { port: grpc }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+          {{- end }}
+          {{- /* probe: "none" (shipping, notification) — no port to probe; these are long-running Kafka consumer processes, not servers. */}}
+          resources:
+            requests:
+              cpu: {{ $root.Values.resources.requests.cpu }}
+              memory: {{ $root.Values.resources.requests.memory }}
+            limits:
+              cpu: {{ $root.Values.resources.limits.cpu }}
+              memory: {{ $root.Values.resources.limits.memory }}
+          # No runAsUser: restricted-v2 assigns a UID from the namespace
+          # range, and every services/<lang>/<domain>/Containerfile image
+          # already runs as `USER 1001:0` (arbitrary UID, group 0) — the
+          # same convention restricted-v2 expects, so no SCC grant is needed
+          # for the six app Deployments.
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
+{{- end }}

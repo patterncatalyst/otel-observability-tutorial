@@ -84,5 +84,6 @@ exclude:
   - demos/
   - deck/
   - presentations/
+  - openshift/
   - README.md
   - LICENSE

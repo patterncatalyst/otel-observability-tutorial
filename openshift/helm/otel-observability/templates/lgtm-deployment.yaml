@@ -1,0 +1,98 @@
+# The all-in-one grafana/otel-lgtm image (OTel Collector + Tempo + Loki +
+# Mimir + Grafana in one container), same image tag stack/compose.yaml runs
+# locally. Config/provisioning come from the two ConfigMaps this chart
+# mounts over the image's built-in defaults — the base Collector pipeline
+# (templates/configmap-otelcol.yaml) and the cross-signal Grafana
+# datasources (templates/configmap-grafana-datasources.yaml).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lgtm
+  labels:
+    app.kubernetes.io/name: lgtm
+    {{- include "otel-observability.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: lgtm
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: lgtm
+        {{- include "otel-observability.labels" . | nindent 8 }}
+    spec:
+      # See templates/serviceaccount-infra.yaml for why this one pod needs
+      # the anyuid SCC: the image writes Grafana/Tempo/Loki/Mimir data as
+      # its own (root) UID, which restricted-v2's randomly assigned UID
+      # forbids.
+      serviceAccountName: {{ .Values.lgtmServiceAccountName }}
+      containers:
+        - name: lgtm
+          image: {{ .Values.lgtm.image | quote }}
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: GF_AUTH_ANONYMOUS_ENABLED
+              value: "true"
+            - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+              value: "Admin"
+            - name: GF_AUTH_DISABLE_LOGIN_FORM
+              value: "true"
+          ports:
+            - name: otlp-grpc
+              containerPort: 4317
+            - name: otlp-http
+              containerPort: 4318
+            - name: grafana
+              containerPort: 3000
+          volumeMounts:
+            - name: otelcol-config
+              mountPath: /otel-lgtm/otelcol-config.yaml
+              subPath: otelcol-config.yaml
+            - name: grafana-datasources
+              mountPath: /otel-lgtm/grafana/conf/provisioning/datasources/zz-tutorial-datasources.yaml
+              subPath: zz-tutorial-datasources.yaml
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "250m"
+            limits:
+              memory: "2Gi"
+              cpu: "2"
+          # Grafana+Tempo+Loki+Mimir+collector all boot in one container, so
+          # give it a generous startup grace before liveness can kill it
+          # mid-boot — same tuning as stack/compose.yaml's healthcheck and
+          # the datamesh appendix's equivalent Deployment.
+          startupProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            periodSeconds: 15
+            failureThreshold: 6
+          securityContext:
+            # Run as root: the otel-lgtm image owns its data dirs as uid 0,
+            # and requesting uid 0 forces admission onto the anyuid SCC
+            # (restricted-v2 rejects root), which this pod's ServiceAccount
+            # is granted. Do NOT set seccompProfile or capabilities here —
+            # anyuid permits neither, and setting them makes anyuid reject
+            # the pod, silently dropping it back to restricted-v2.
+            runAsUser: 0
+      volumes:
+        - name: otelcol-config
+          configMap:
+            name: otel-observability-otelcol-config
+        - name: grafana-datasources
+          configMap:
+            name: otel-observability-grafana-datasources

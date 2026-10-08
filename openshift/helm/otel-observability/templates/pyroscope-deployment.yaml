@@ -1,0 +1,67 @@
+# Grafana Pyroscope — the fourth signal (continuous profiling), same image
+# and `server` command stack/compose.yaml runs locally. No PVC: compose
+# doesn't persist profile data across restarts either (see
+# stack/compose.yaml's comment on this service), so profile storage here is
+# the container's own ephemeral filesystem, consistent with that.
+#
+# No fixed runAsUser: Grafana's upstream images, including this one, are
+# built to run under an arbitrary assigned UID with group 0 writable data
+# dirs — the same restricted-v2-compatible convention the six app images use
+# (see services/<lang>/<domain>/Containerfile). This has NOT been exercised
+# against a live cluster as part of this appendix (see the chapter's
+# verification-status note) — if it turns out Pyroscope's image needs a
+# fixed UID the way otel-lgtm does, bind it to the `anyuid` SCC the same way
+# lgtm-deployment.yaml does.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pyroscope
+  labels:
+    app.kubernetes.io/name: pyroscope
+    {{- include "otel-observability.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: pyroscope
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: pyroscope
+        {{- include "otel-observability.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: pyroscope
+          image: {{ .Values.pyroscope.image | quote }}
+          imagePullPolicy: IfNotPresent
+          args: ["server"]
+          ports:
+            - name: http
+              containerPort: 4040
+          # No healthcheck in stack/compose.yaml either: this image is
+          # distroless (no shell, no curl/wget), so there's no in-container
+          # CMD to probe with, and its internal components can take up to
+          # ~2 minutes to report ready on a cold start. A TCP probe at least
+          # confirms the process is listening.
+          startupProbe:
+            tcpSocket: { port: http }
+            periodSeconds: 5
+            failureThreshold: 36
+          readinessProbe:
+            tcpSocket: { port: http }
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            tcpSocket: { port: http }
+            periodSeconds: 15
+            failureThreshold: 6
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { cpu: 500m, memory: 512Mi }
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
