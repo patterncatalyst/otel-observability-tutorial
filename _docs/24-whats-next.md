@@ -181,7 +181,7 @@ version in a production deployment, rather than always tracking the
 latest, is a reasonable way to avoid an unexpected attribute rename
 breaking a dashboard built against the old name.
 
-## Reading further
+## Further Reading
 
 This tutorial focused on the mechanics: what to instrument, how the
 signals correlate, how to keep them affordable, and how to turn them into
@@ -190,7 +190,7 @@ linked from this site's reading list go deeper into the thinking behind
 those mechanics, each from a different angle, and are worth reading in
 full once the hands-on material here feels solid.
 
-*Observability Engineering*, by Charity Majors, Liz Fong-Jones, and George
+[*Observability Engineering*](https://www.oreilly.com/library/view/observability-engineering/9781492076438/), by Charity Majors, Liz Fong-Jones, and George
 Miranda, makes the case for observability as a distinct discipline from
 traditional monitoring, built around the idea that a useful observability
 practice lets you ask new questions of a system after an incident starts,
@@ -198,13 +198,13 @@ rather than only answering the questions a dashboard was built to answer
 in advance. It is the closest match to this tutorial's own emphasis on
 structured, correlated signals over isolated metrics.
 
-*Site Reliability Engineering* and its companion volumes, from Google,
+[*Site Reliability Engineering*](https://www.oreilly.com/library/view/site-reliability-engineering/9798341607675/) and its companion volumes, from Google,
 are where the SLO and error-budget framing used in the service graph
 chapter originates, laid out in far more depth than a single chapter can
 cover, including how error budgets interact with release velocity and
 on-call practice at organizational scale.
 
-*Building Resilient Distributed Systems* — call it patterns for designing
+[*Building Resilient Distributed Systems*](https://www.oreilly.com/library/view/building-resilient-distributed/9781098163532/) — call it patterns for designing
 systems that survive partial failure, which is the backdrop every signal
 in this tutorial exists to make visible. Traces, metrics, logs, and
 profiles do not make a system resilient on their own; they make it
