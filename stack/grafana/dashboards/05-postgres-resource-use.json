@@ -1,0 +1,89 @@
+{
+  "uid": "postgres-resource-use",
+  "title": "Postgres & Resource (USE)",
+  "tags": ["otel-tutorial", "use", "postgres", "resource"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "editable": true,
+  "refresh": "30s",
+  "time": { "from": "now-30m", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "type": "custom",
+        "name": "cpu_service",
+        "label": "CPU profile service",
+        "query": "order-python,inventory-python,payment-python,review-python,shipping-python,notification-python",
+        "current": { "text": "order-python", "value": "order-python" }
+      }
+    ]
+  },
+  "annotations": { "list": [] },
+  "panels": [
+    {
+      "type": "row",
+      "title": "Postgres — query latency and throughput (from DB client span metrics)",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 1
+    },
+    {
+      "type": "timeseries",
+      "title": "DB query latency p95 by operation (s)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 1 },
+      "id": 2,
+      "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "fillOpacity": 5 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "max"] }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "histogram_quantile(0.95, sum by (le, service, span_name) (rate(traces_spanmetrics_latency_bucket{span_kind=\"SPAN_KIND_CLIENT\", span_name=~\"SELECT|INSERT|UPDATE|DELETE\"}[$__rate_interval])))", "legendFormat": "{{service}} · {{span_name}}", "range": true, "refId": "A" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "DB query rate by service & operation (q/s)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 1 },
+      "id": 3,
+      "fieldConfig": { "defaults": { "unit": "qps", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "mean"] }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum by (service, span_name) (rate(traces_spanmetrics_calls_total{span_kind=\"SPAN_KIND_CLIENT\", span_name=~\"SELECT|INSERT|UPDATE|DELETE\"}[$__rate_interval]))", "legendFormat": "{{service}} · {{span_name}}", "range": true, "refId": "A" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "appdb server-side latency p95 by caller (service graph)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 10 },
+      "id": 4,
+      "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "fillOpacity": 5 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "max"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "histogram_quantile(0.95, sum by (le, client) (rate(traces_service_graph_request_server_seconds_bucket{server=\"appdb\"}[$__rate_interval])))", "legendFormat": "{{client}} → appdb p95", "range": true, "refId": "A" }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Resource — CPU utilization (where the CPU time goes)",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 18 },
+      "id": 5
+    },
+    {
+      "type": "text",
+      "title": "About resource metrics in this stack",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 19 },
+      "id": 6,
+      "options": { "mode": "markdown", "content": "**Utilization** is read from Pyroscope CPU profiles (right): the flame graph shows which functions consume CPU for the selected service, the closest available view of CPU utilization and saturation.\n\nThe single-image `grafana/otel-lgtm` stack ships **no cAdvisor or node-exporter**, so container cgroup CPU percentage, memory working set, and OOM counters are **not scraped into Prometheus**. The only metrics in Mimir are the HTTP server histograms, `orders_placed_total`, and the Tempo-generated span and service-graph series. Add a cgroup exporter to extend this dashboard with memory and saturation panels.\n\nSee the **Profiles (Pyroscope)** dashboard for per-service flame graphs." }
+    },
+    {
+      "type": "flamegraph",
+      "title": "CPU flame graph — $cpu_service (process_cpu)",
+      "datasource": { "type": "grafana-pyroscope-datasource", "uid": "pyroscope" },
+      "gridPos": { "h": 8, "w": 16, "x": 8, "y": 19 },
+      "id": 7,
+      "targets": [
+        { "datasource": { "type": "grafana-pyroscope-datasource", "uid": "pyroscope" }, "queryType": "profile", "profileTypeId": "process_cpu:cpu:nanoseconds:cpu:nanoseconds", "labelSelector": "{service_name=\"$cpu_service\"}", "groupBy": [], "refId": "A" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "uid": "profiles-pyroscope",
+  "title": "Profiles (Pyroscope)",
+  "tags": ["otel-tutorial", "profiles", "pyroscope"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "editable": true,
+  "refresh": "30s",
+  "time": { "from": "now-30m", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "type": "custom",
+        "name": "service",
+        "label": "Service",
+        "query": "order-python,inventory-python,payment-python,review-python,shipping-python,notification-python",
+        "current": { "text": "order-python", "value": "order-python" }
+      }
+    ]
+  },
+  "annotations": { "list": [] },
+  "panels": [
+    {
+      "type": "row",
+      "title": "CPU profile — $service",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 1
+    },
+    {
+      "type": "flamegraph",
+      "title": "CPU flame graph — $service (process_cpu:cpu:nanoseconds)",
+      "datasource": { "type": "grafana-pyroscope-datasource", "uid": "pyroscope" },
+      "gridPos": { "h": 14, "w": 24, "x": 0, "y": 1 },
+      "id": 2,
+      "targets": [
+        { "datasource": { "type": "grafana-pyroscope-datasource", "uid": "pyroscope" }, "queryType": "profile", "profileTypeId": "process_cpu:cpu:nanoseconds:cpu:nanoseconds", "labelSelector": "{service_name=\"$service\"}", "groupBy": [], "refId": "A" }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Order service CPU (always-on reference)",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 15 },
+      "id": 3
+    },
+    {
+      "type": "flamegraph",
+      "title": "CPU flame graph — order-python",
+      "datasource": { "type": "grafana-pyroscope-datasource", "uid": "pyroscope" },
+      "gridPos": { "h": 12, "w": 12, "x": 0, "y": 16 },
+      "id": 4,
+      "targets": [
+        { "datasource": { "type": "grafana-pyroscope-datasource", "uid": "pyroscope" }, "queryType": "profile", "profileTypeId": "process_cpu:cpu:nanoseconds:cpu:nanoseconds", "labelSelector": "{service_name=\"order-python\"}", "groupBy": [], "refId": "A" }
+      ]
+    },
+    {
+      "type": "flamegraph",
+      "title": "CPU flame graph — review-python",
+      "datasource": { "type": "grafana-pyroscope-datasource", "uid": "pyroscope" },
+      "gridPos": { "h": 12, "w": 12, "x": 12, "y": 16 },
+      "id": 5,
+      "targets": [
+        { "datasource": { "type": "grafana-pyroscope-datasource", "uid": "pyroscope" }, "queryType": "profile", "profileTypeId": "process_cpu:cpu:nanoseconds:cpu:nanoseconds", "labelSelector": "{service_name=\"review-python\"}", "groupBy": [], "refId": "A" }
+      ]
+    }
+  ]
+}

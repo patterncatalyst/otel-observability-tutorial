@@ -1,0 +1,112 @@
+{
+  "uid": "signal-correlation-showcase",
+  "title": "Signal Correlation Showcase",
+  "tags": ["otel-tutorial", "correlation", "showcase"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "editable": true,
+  "refresh": "",
+  "time": { "from": "now-1h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "type": "textbox",
+        "name": "trace_id",
+        "label": "trace_id",
+        "query": "034d98e253a92b0707bb5ffc2a00b9bd",
+        "current": { "text": "034d98e253a92b0707bb5ffc2a00b9bd", "value": "034d98e253a92b0707bb5ffc2a00b9bd" }
+      },
+      {
+        "type": "custom",
+        "name": "service",
+        "label": "Service (for metric/profile context)",
+        "query": "order-python,inventory-python,payment-python,review-python,shipping-python,notification-python",
+        "current": { "text": "order-python", "value": "order-python" }
+      }
+    ]
+  },
+  "annotations": { "list": [] },
+  "panels": [
+    {
+      "type": "row",
+      "title": "One trace_id, four signals — paste a request's trace_id into $trace_id",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 1
+    },
+    {
+      "type": "text",
+      "title": "How to use",
+      "gridPos": { "h": 4, "w": 24, "x": 0, "y": 1 },
+      "id": 2,
+      "options": { "mode": "markdown", "content": "Set **$trace_id** to one request's id (copy it from the Logs & Correlation dashboard, a trace in the Trace Explorer, or an exemplar diamond on the Service Overview latency panel). Every panel below is keyed to that id. The **Trace** panel shows the waterfall, the **Logs** panel shows only that request's log lines (each `trace_id` links back to Tempo), the **Metric** panel places the request in its service's traffic with exemplars, and the **Profile** panel shows where that service burned CPU over the window.\n\nThe logs filter uses `0*$trace_id`, so an id copied from Tempo search (which strips leading zeros) still matches Loki's zero-padded `trace_id`." }
+    },
+    {
+      "type": "row",
+      "title": "① Trace (Tempo)",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "id": 3
+    },
+    {
+      "type": "traces",
+      "title": "Trace waterfall — $trace_id",
+      "datasource": { "type": "tempo", "uid": "tempo" },
+      "gridPos": { "h": 11, "w": 24, "x": 0, "y": 6 },
+      "id": 4,
+      "targets": [
+        { "datasource": { "type": "tempo", "uid": "tempo" }, "queryType": "traceql", "query": "$trace_id", "refId": "A" }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "② Metric (Mimir) — request rate & p95 with exemplars",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 17 },
+      "id": 5
+    },
+    {
+      "type": "timeseries",
+      "title": "$service request rate & p95 latency (exemplars → Tempo)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 18 },
+      "id": 6,
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [ { "matcher": { "id": "byName", "options": "p95 latency (ms)" }, "properties": [ { "id": "unit", "value": "ms" }, { "id": "custom.axisPlacement", "value": "right" } ] } ] },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(rate(http_server_duration_milliseconds_count{job=\"$service\"}[$__rate_interval]))", "legendFormat": "request rate (req/s)", "range": true, "exemplar": true, "refId": "A" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_duration_milliseconds_bucket{job=\"$service\"}[$__rate_interval])))", "legendFormat": "p95 latency (ms)", "range": true, "exemplar": true, "refId": "B" }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "③ Logs (Loki) — only this trace's lines",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 26 },
+      "id": 7
+    },
+    {
+      "type": "logs",
+      "title": "Logs for $trace_id (each trace_id links to Tempo)",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 27 },
+      "id": 8,
+      "options": { "showTime": true, "showLabels": true, "wrapLogMessage": true, "enableLogDetails": true, "dedupStrategy": "none", "sortOrder": "Ascending" },
+      "targets": [
+        { "datasource": { "type": "loki", "uid": "loki" }, "expr": "{service_name=~\".+\"} | trace_id=~`0*$trace_id`", "queryType": "range", "refId": "A" }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "④ Profile (Pyroscope) — $service CPU over the window",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 37 },
+      "id": 9
+    },
+    {
+      "type": "flamegraph",
+      "title": "$service CPU flame graph (process_cpu; profiles are service+time scoped, not trace scoped)",
+      "datasource": { "type": "grafana-pyroscope-datasource", "uid": "pyroscope" },
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 38 },
+      "id": 10,
+      "targets": [
+        { "datasource": { "type": "grafana-pyroscope-datasource", "uid": "pyroscope" }, "queryType": "profile", "profileTypeId": "process_cpu:cpu:nanoseconds:cpu:nanoseconds", "labelSelector": "{service_name=\"$service\"}", "groupBy": [], "refId": "A" }
+      ]
+    }
+  ]
+}
