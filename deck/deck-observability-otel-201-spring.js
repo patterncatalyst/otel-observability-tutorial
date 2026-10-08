@@ -95,7 +95,7 @@ function divider(code, title, subtitle, notes) {
     { text: "Profiling with Pyroscope", options: { bold: true } },
     "A second Java agent, the JFR format, and where it fits next to JVM perf work",
     { text: "Production notes", options: { bold: true } },
-    "Resource attributes and three Boot-4 gotchas this tutorial hit for real",
+    "Resource attributes and three Boot-4 configuration issues this tutorial encountered and fixed",
   ]);
   addNotes(s, "Walk the agenda left to right, top to bottom. The first half covers getting telemetry out of the JVM at all: the agent, manual enrichment, metrics, and logs. The second half covers propagation and operations: baggage, Kafka, profiling, and the gotchas worth knowing before a real deployment. What to show: nothing yet, this is a roadmap slide.");
 }
@@ -119,7 +119,7 @@ divider("00", "The Java Agent", "Why Boot 4.1.x needs the agent, not the starter
     { text: "This is not a configuration problem to work around", options: { bold: true } },
     "the starter's autoconfiguration assumes a servlet and serialization stack this Boot version no longer ships.",
   ]);
-  addNotes(s, "This is the headline fact of the whole deck, and it's worth stating plainly: do not add opentelemetry-spring-boot-starter to a Boot 4.1.x pom.xml. It will not quietly misbehave, it will fail the build. What to show: nothing yet — the fix is the javaagent, covered next.");
+  addNotes(s, "This is the headline fact of the whole deck: do not add opentelemetry-spring-boot-starter to a Boot 4.1.x pom.xml. It will not quietly misbehave, it will fail the build. What to show: nothing yet — the fix is the javaagent, covered next.");
 }
 
 {
@@ -317,7 +317,7 @@ divider("02", "Metrics & Exemplars", "Micrometer stays the API; the agent bridge
     "log.info(\"order placed id={} status={} cart={}\", orderId, status, cartId);",
   ], "No protocol-level metric could count this: PLACED vs. REJECTED is a business outcome, not an HTTP status code.",
   { fontSize: 13 });
-  addNotes(s, "The agent's Micrometer bridge already produces protocol-level metrics for free — request duration histograms for the REST endpoint, call counts for the gRPC clients. None of those can answer 'how many orders were rejected,' because that distinction lives in the order's own status field. status takes exactly two values, so tagging by it produces exactly two time series regardless of traffic volume — the opposite of tagging by customer_id or cart.id, which would be unbounded. What to show: this exact line, then a Mimir query for orders_placed_total.");
+  addNotes(s, "The agent's Micrometer bridge already produces protocol-level metrics with no extra code — request duration histograms for the REST endpoint, call counts for the gRPC clients. None of those can answer 'how many orders were rejected,' because that distinction lives in the order's own status field. status takes exactly two values, so tagging by it produces exactly two time series regardless of traffic volume — the opposite of tagging by customer_id or cart.id, which would be unbounded. What to show: this exact line, then a Mimir query for orders_placed_total.");
 }
 
 {
@@ -416,7 +416,7 @@ divider("04", "Kafka Context Propagation", "A producer-side JVM system property,
     "fi",
   ], "A system property, not an OTEL_* variable, because this agent instrumentation setting has never heard of PROPAGATE_KAFKA_CONTEXT.",
   { fontSize: 13 });
-  addNotes(s, "This is a small but real distinction worth calling out: the agent's own instrumentation settings are exposed as JVM -D system properties, not environment variables it autoconfigures from. entrypoint.sh is the translation layer between the compose-level environment variable this tutorial's toggle uses and the agent's actual configuration surface. What to show: run the order service with the toggle flipped both ways and diff the resulting java command line.");
+  addNotes(s, "This distinction matters: the agent's own instrumentation settings are exposed as JVM -D system properties, not environment variables it autoconfigures from. entrypoint.sh is the translation layer between the compose-level environment variable this tutorial's toggle uses and the agent's actual configuration surface. What to show: run the order service with the toggle flipped both ways and diff the resulting java command line.");
 }
 
 {
@@ -480,7 +480,7 @@ divider("05", "Profiling With Pyroscope", "A second Java agent, sampling call st
 // =============================================================================
 // Section 06 — Production notes
 // =============================================================================
-divider("06", "Production Notes", "Resource attributes and three Boot-4 gotchas hit for real.",
+divider("06", "Production Notes", "Resource attributes and three Boot-4 configuration issues this tutorial encountered and fixed.",
   "Section divider. These are not hypothetical warnings — all three were hit during this tutorial's own build and verified fixed. What to show: nothing yet.");
 
 {
@@ -522,7 +522,7 @@ divider("06", "Production Notes", "Resource attributes and three Boot-4 gotchas 
     "USER 185",
   ], "The UBI OpenJDK runtime image runs as uid 185; /deployments itself is root-owned by default.",
   { fontSize: 13 });
-  addNotes(s, "This is a two-step dance worth noticing: the image briefly switches back to USER root purely to create and chown one directory, then drops straight back to the unprivileged uid 185 it runs as. Skipping this produces a logback FILE appender that fails to write with a permission-denied error the console appender masks, since console output still works fine. What to show: the full Containerfile, including the build-stage comment about why that earlier stage runs as root too (Maven needs to create /build/target under rootless podman).");
+  addNotes(s, "This is a two-step sequence: the image briefly switches back to USER root purely to create and chown one directory, then drops straight back to the unprivileged uid 185 it runs as. Skipping this produces a logback FILE appender that fails to write with a permission-denied error the console appender masks, since console output still works fine. What to show: the full Containerfile, including the build-stage comment about why that earlier stage runs as root too (Maven needs to create /build/target under rootless podman).");
 }
 
 {

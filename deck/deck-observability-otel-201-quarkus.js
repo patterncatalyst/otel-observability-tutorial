@@ -121,7 +121,7 @@ divider("00", "Build-Time Instrumentation", "No java agent anywhere in this Cont
     { text: "The cost moves earlier", options: { bold: true } },
     "upgrading the extension means a dependency bump and a full rebuild, and coverage is whatever the build step could see — not inherited the way a generic bytecode agent inherits any JDBC driver it recognizes.",
   ]);
-  addNotes(s, "This is the single idea the rest of the deck hangs off. Spring Boot's OpenTelemetry Java agent attaches at the JVM level and weaves bytecode as classes load — a runtime cost paid on every boot, but completely decoupled from the application's own build. Quarkus inverts that: the instrumentation is generated once, during mvn package, baked into the jar, with zero runtime weaving cost — but now configuration, coverage, and upgrades all move to build time instead. What to show: nothing yet — the next slide draws this contrast as a diagram.");
+  addNotes(s, "This is the single idea the rest of this section builds on. Spring Boot's OpenTelemetry Java agent attaches at the JVM level and weaves bytecode as classes load — a runtime cost paid on every boot, but completely decoupled from the application's own build. Quarkus inverts that: the instrumentation is generated once, during mvn package, baked into the jar, with zero runtime weaving cost — but now configuration, coverage, and upgrades all move to build time instead. What to show: nothing yet — the next slide draws this contrast as a diagram.");
 }
 
 {
@@ -129,7 +129,7 @@ divider("00", "Build-Time Instrumentation", "No java agent anywhere in this Cont
   addDiagramSlide(s, "BUILD-TIME · THE CONTRAST", "Two attach mechanisms, two costs",
     "qk01-attach-mechanism",
     "Spring pays the cost at every boot; Quarkus pays it once, at build time.");
-  addNotes(s, "Spring's path: JVM starts, -javaagent attaches, classes load and get rewritten, app is ready — all four steps happen on every container start. Quarkus's path: mvn package runs the extension once, the jar is built with instrumentation already in it, the JVM starts with nothing left to weave. Neither is strictly better — the Spring agent's coverage is inherited for free from any JDBC driver it recognizes; the Quarkus extension's coverage is fixed at whatever the build step could see. What to show: nothing yet — the next slide is the actual dependency block with no agent in sight.");
+  addNotes(s, "Spring's path: JVM starts, -javaagent attaches, classes load and get rewritten, app is ready — all four steps happen on every container start. Quarkus's path: mvn package runs the extension once, the jar is built with instrumentation already in it, the JVM starts with nothing left to weave. Neither is strictly better — the Spring agent's coverage comes automatically from any JDBC driver it recognizes; the Quarkus extension's coverage is fixed at whatever the build step could see. What to show: nothing yet — the next slide is the actual dependency block with no agent in sight.");
 }
 
 {
@@ -186,7 +186,7 @@ divider("01", "The OTLP Mapping Gotcha", "quarkus.otel.exporter.otlp.* does not 
     { text: "The only reliable check", options: { bold: true } },
     "is whether traces actually arrive in Tempo, not a warning in the console — because no warning was ever going to print.",
   ]);
-  addNotes(s, "This is worth dwelling on because it's the opposite failure mode from a crash: everything looks fine. POST /orders still returns 201, the database insert still happens, the Kafka message still publishes — the only thing missing is every signal this entire tutorial exists to demonstrate. The fix is always the same shape: confirm the mapping lines are present and point at a reachable host:port, not search the application log for an error that was never going to appear. What to show: an empty Tempo service list next to a perfectly normal curl response from POST /orders, if reproducing this live.");
+  addNotes(s, "This is the opposite failure mode from a crash: everything looks fine. POST /orders still returns 201, the database insert still happens, the Kafka message still publishes — the only thing missing is every signal this entire tutorial exists to demonstrate. The fix is always the same shape: confirm the mapping lines are present and point at a reachable host:port, not search the application log for an error that was never going to appear. What to show: an empty Tempo service list next to a perfectly normal curl response from POST /orders, if reproducing this live.");
 }
 
 {
@@ -433,7 +433,7 @@ divider("07", "Profiling & Native Image", "The same Pyroscope agent as Spring Bo
     { text: "The OTel profiling signal itself is still alpha", options: { bold: true } },
     "across every stack this tutorial covers — the eBPF-based, no-agent-attached path mentioned in the profiling chapter is the direction that eventually closes this gap for native image too.",
   ]);
-  addNotes(s, "This slide connects two things that are each individually true and worth being precise about separately: quarkus-opentelemetry's traces, metrics, and logs instrumentation works the same way whether the final artifact is a JVM jar or a native-image binary, because it's generated at build time either way. The Pyroscope Java agent, by contrast, specifically needs a JVM to attach -javaagent to, which this stack's Quarkus services have, running in JVM mode — a native-image build of the same service would need a different continuous-profiling mechanism. What to show: nothing — this stays conceptual, since this tutorial's demo runs JVM mode throughout; it's worth flagging for anyone planning a native-image deployment of these same services.");
+  addNotes(s, "This slide connects two things that are each individually true and worth being precise about separately: quarkus-opentelemetry's traces, metrics, and logs instrumentation works the same way whether the final artifact is a JVM jar or a native-image binary, because it's generated at build time either way. The Pyroscope Java agent, by contrast, specifically needs a JVM to attach -javaagent to, which this stack's Quarkus services have, running in JVM mode — a native-image build of the same service would need a different continuous-profiling mechanism. What to show: nothing — this stays conceptual, since this tutorial's demo runs JVM mode throughout; anyone planning a native-image deployment of these same services will need a different profiling mechanism.");
 }
 
 // =============================================================================

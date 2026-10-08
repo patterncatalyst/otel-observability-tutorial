@@ -235,37 +235,39 @@ divider("01", "Manual SDK Setup", "obs/otel.py: one setup() call, and the two th
 
 {
   const s = S();
-  addCodeSlide(s, "MANUAL SPANS · ANATOMY", "A retry loop auto-instrumentation can't see", "python", [
-    "# services/python/order/src/order/main.py",
-    "with otel.tracer().start_as_current_span(\"inventory.check-with-retry\") as span:",
-    "    for attempt in range(1, MAX_RETRIES + 1):",
-    "        try:",
-    "            response = await clients.check_stock(sku, quantity)",
-    "            span.set_attribute(\"inventory.attempts\", attempt)",
-    "            span.set_status(StatusCode.OK)",
-    "            return response.available",
-    "        except Exception as exc:",
-    "            last_exc = exc",
-    "            span.add_event(\"attempt failed\", {\"attempt\": attempt})",
-    "            await asyncio.sleep(RETRY_DELAY_SECONDS)",
-    "    span.record_exception(last_exc)",
-    "    span.set_status(StatusCode.ERROR, \"exhausted retries\")",
-  ], "Named for the business operation, not CheckStock — that name already belongs to the auto-generated gRPC client span.", { fontSize: 12 });
-  addNotes(s, "Every call to check_stock inside this loop produces its own auto-instrumented gRPC client span; the manual span wrapping all of them is one level up, representing 'get a stock answer, retrying as needed.' All four building blocks of a span are visible here: an attribute (inventory.attempts), events (one per failed attempt), and a terminal status (OK or ERROR with a recorded exception). What to show: this exact trace in Tempo if the stack is live — the retry events on a sub-timeline inside the expanded span.");
+  addContentTitle(s, "MANUAL SPANS · ANATOMY", "A retry loop auto-instrumentation can't see");
+  addBullets(s, [
+    { text: "A span has four parts, set independently", options: { bold: true } },
+    "a name chosen for the business operation, attributes as key/value pairs, timestamped events, and a terminal status — true whether an agent or application code creates the span.",
+    { text: "_check_stock_with_retry is where a manual span would attach", options: { bold: true } },
+    "it wraps up to five attempts around the inventory gRPC call today with a plain try/except and a log.warning per attempt — no span of its own yet.",
+    { text: "A span added there would carry an attempt count as an attribute", options: { bold: true } },
+    "a failed-attempt event per retry, and an OK or ERROR status once the loop exits — the three pieces a log line alone can't group under one timeline.",
+    { text: "Naming would follow the business operation, not the protocol call", options: { bold: true } },
+    "check_stock already names the auto-generated gRPC client span nested inside each attempt; the wrapping span needs its own name.",
+  ]);
+  addNotes(s, "This retry loop is real — it lives in order's _check_stock_with_retry — but it has no manual span today, only a log.warning per failed attempt. The point of this slide is the anatomy a span would need if one were added here, not a span that exists in the codebase right now. What to show: the real retry loop in order/src/order/main.py, and what each log.warning call would become if replaced with a span event.");
 }
 
 {
   const s = S();
-  addCodeSlide(s, "MANUAL SPANS · ENRICHING, NOT CREATING", "Span.current() for a fact that doesn't need its own span", "python", [
-    "# services/python/order/src/order/main.py",
-    "from opentelemetry import trace",
-    "",
-    "amount_cents = body.quantity * UNIT_PRICE_CENTS",
-    "span = trace.get_current_span()",
-    "span.set_attribute(\"order.amount_cents\", amount_cents)",
-    "span.set_attribute(\"order.sku\", body.sku)",
-  ], "No Tracer needed, no lifecycle to manage — this attaches to the auto-generated POST /orders span already active.", { fontSize: 15 });
-  addNotes(s, "The rule of thumb: reach for trace.get_current_span() to attach a fact to the span already running, and reach for a new child span only when the thing you're describing has its own start, end, and possible failure — a retry loop does, a single computed value doesn't. With OTEL_SDK_DISABLED=true, get_current_span() returns a harmless no-op span that silently discards the attribute, so this code never needs an if-tracing-enabled guard. What to show: nothing — transition to where auto-instrumentation stops entirely.");
+  addContentTitle(s, "MANUAL SPANS · ENRICHING, NOT CREATING", "Enrichment, Not a New Span");
+  addTwoColBullets(s, [
+    { text: "A new child span", options: { bold: true } },
+    "is the right tool when the thing being described has its own start, its own end, and its own possible failure — a retry loop, a resolver call with a real cost.",
+    { text: "trace.get_current_span()", options: { bold: true } },
+    "returns whatever span is active on the current context — the auto-generated FastAPI or gRPC server span, if no manual child span has started yet.",
+    { text: "No Tracer call needed for this", options: { bold: true } },
+    "there is nothing to start and nothing to end, because the span being enriched isn't owned by this code at all.",
+  ], [
+    { text: "The one real example in this codebase", options: { bold: true } },
+    "is cart.id: the order service sets it as baggage, and inventory and payment read it back and attach it to their own incoming spans — covered later in this section.",
+    { text: "With tracing disabled", options: { bold: true } },
+    "OTEL_SDK_DISABLED=true, get_current_span() returns a harmless no-op span that silently discards the attribute — no if-tracing-enabled guard needed.",
+    { text: "The rule of thumb", options: { bold: true } },
+    "reach for a new child span only when the operation has its own lifecycle; reach for get_current_span() to attach a fact to the one already in flight.",
+  ]);
+  addNotes(s, "This is the same API shape across every language this tutorial covers — the contrast earlier in this section, otel.tracer() versus a static accessor, only applies to starting a brand-new span. Enriching an existing one needs no Tracer reference at all. What to show: nothing yet — the baggage section later in this deck has the real cart.id example with its actual file paths.");
 }
 
 {
@@ -273,7 +275,7 @@ divider("01", "Manual SDK Setup", "obs/otel.py: one setup() call, and the two th
   addDiagramSlide(s, "THE GAP MAP", "Zero-code stops at the async boundary",
     "py02-instrumentation-coverage",
     "FastAPI and the synchronous paths are covered; grpc.aio, asyncpg, Strawberry resolvers, and aiokafka all need something written by hand.");
-  addNotes(s, "This is the Python track's version of chapter 17's decision framework, laid out spatially: the left panel is 'nothing to write,' the right panel is where every remaining slide in the framework and instrumentation sections of this deck lives. Notice the right panel has two different kinds of manual work in it — grpc.aio and asyncpg are one line of instrumentor registration each, while Strawberry's resolver spans and aiokafka's propagation are genuinely hand-written code. What to show: nothing yet — the next section covers each right-panel box in turn.");
+  addNotes(s, "This is the Python track's version of chapter 17's decision framework, laid out spatially: the left panel is 'nothing to write,' the right panel is where every remaining slide in the framework and instrumentation sections of this deck lives. Notice the right panel has two different kinds of manual work in it — grpc.aio and asyncpg are one line of instrumentor registration each, while Strawberry's resolver spans and aiokafka's propagation are entirely hand-written code. What to show: nothing yet — the next section covers each right-panel box in turn.");
 }
 
 // =============================================================================
@@ -311,7 +313,7 @@ divider("02", "Framework & Driver Instrumentation", "FastAPI, grpc.aio, Strawber
     "            rows = await pool.fetch(f\"SELECT {SELECT_FIELDS} FROM reviews\")",
     "            return [_row_to_review(r) for r in rows]",
   ], "FastAPI's instrumentor sees one POST /graphql request; it has no way to know which of three resolvers ran.", { fontSize: 14 });
-  addNotes(s, "This is a manual span, not enrichment — FastAPI auto-instrumentation creates exactly one span for the HTTP request, and GraphQL hides the fact that one request can touch multiple logical operations behind that single endpoint. review.resolve_reviews, review.resolve_review, and review.add_review are each named for the resolver they wrap, nested as children under the auto-generated POST /graphql span. What to show: a trace for an addReview mutation in Tempo — one root HTTP span, one child resolver span, one asyncpg INSERT span nested under that.");
+  addNotes(s, "This is a manual span, not enrichment — FastAPI auto-instrumentation creates exactly one span for the HTTP request, and GraphQL lets one request touch multiple logical operations behind that single endpoint, invisibly to the HTTP span. review.resolve_reviews, review.resolve_review, and review.add_review are each named for the resolver they wrap, nested as children under the auto-generated POST /graphql span. What to show: a trace for an addReview mutation in Tempo — one root HTTP span, one child resolver span, one asyncpg INSERT span nested under that.");
 }
 
 // =============================================================================
@@ -333,42 +335,37 @@ divider("03", "Metrics", "The OTel Metrics API, used directly — no bridge, bec
     { text: "No pull-based /metrics endpoint exists", options: { bold: true } },
     "otel.meter() only ever pushes via PeriodicExportingMetricReader — verifying the counter means checking Mimir, or the correlated log line, not scraping the process directly.",
   ]);
-  addNotes(s, "This is the cleanest contrast in the whole 201 series: identical business decision, identical metric name and status tag across all three languages, but Python's code path to Mimir has one fewer layer than either Java stack, because there was never a pre-existing Micrometer convention to preserve compatibility with. What to show: nothing yet — the actual counter and histogram code is next.");
+  addNotes(s, "This is the cleanest contrast in the whole 201 series: identical business decision, identical metric name and status tag across all three languages, but Python's code path to Mimir has one fewer layer than either Java stack, because there was never a pre-existing Micrometer convention to preserve compatibility with. What to show: nothing yet — the actual counter code is next.");
 }
 
 {
   const s = S();
-  addCodeSlide(s, "METRICS · COUNTER AND HISTOGRAM", "orders_placed_total and the fulfillment-duration histogram", "python", [
-    "# services/python/order/src/order/main.py — created once at startup",
+  addCodeSlide(s, "METRICS · THE REAL COUNTER", "orders_placed_total, created once and incremented per request", "python", [
+    "# services/python/order/src/order/main.py",
     "app.state.orders_counter = otel.meter().create_counter(",
     "    \"orders_placed_total\", description=\"Orders placed, by status\"",
     ")",
-    "app.state.fulfillment_histogram = otel.meter().create_histogram(",
-    "    \"orders_fulfillment_duration_ms\", unit=\"ms\",",
-    "    description=\"Time to fulfill an order, from inventory check to Kafka publish\",",
-    ")",
     "",
-    "# ...incremented/recorded per request in the handler:",
-    "app.state.fulfillment_histogram.record(duration_ms, {\"status\": status})",
+    "# ...incremented per request in the handler:",
     "app.state.orders_counter.add(1, {\"status\": status})",
-  ], "status takes exactly two values — PLACED or REJECTED — so this counter stays at two time series no matter how much traffic grows.", { fontSize: 13 });
-  addNotes(s, "Both instruments are created once at startup, next to each other, and recorded against directly with no bridge to reason about — contrast this with Spring and Quarkus's identical four-line Timer.start/sample.stop idiom, where the code looks the same across both Java stacks but what happens to that code's output on the way out differs by bridge. What to show: a Mimir query for orders_fulfillment_duration_ms_bucket if live — note Python's metric name needs no dots-to-underscores translation, because it was written in Prometheus-shaped form from the start.");
+  ], "status takes exactly two values — PLACED or REJECTED — so this counter stays at two time series no matter how much traffic grows.", { fontSize: 14 });
+  addNotes(s, "This instrument is created once at startup and recorded against directly with no bridge to reason about — contrast this with Spring and Quarkus's identical meterRegistry.counter(...).increment() call, same metric name and status tag, one fewer layer underneath because there's no Micrometer bridge to translate through. What to show: a Mimir query for orders_placed_total if live — note Python's metric name needs no dots-to-underscores translation, because it was written in Prometheus-shaped form from the start.");
 }
 
 {
   const s = S();
-  addContentTitle(s, "METRICS · EXEMPLARS", "A histogram bucket that remembers a trace ID");
+  addContentTitle(s, "METRICS · EXEMPLARS", "A sample point that remembers a trace ID");
   addBullets(s, [
     { text: "OTEL_METRICS_EXEMPLAR_FILTER=trace_based", options: { bold: true } },
-    "set in the Containerfile, tells the SDK to attach an exemplar whenever a sampled trace is active at recording time — no extra code at the call site.",
-    { text: "fulfillment_histogram.record(...) executes inside the active span", options: { bold: true } },
-    "the auto-generated POST /orders root span, and possibly a manual child span too — so every measurement has a live trace context to attach.",
-    { text: "The exemplar is one sample, not an aggregate", options: { bold: true } },
-    "chosen by the SDK's exemplar reservoir to be representative of what landed in that specific bucket.",
-    { text: "If a trace is dropped before export, the measurement still counts", options: { bold: true } },
-    "the histogram's count and sum are unaffected — only the exemplar pointer is missing for that one data point.",
+    "set in the Containerfile, tells the SDK to attach an exemplar to a measurement whenever a sampled trace is active at record time — no extra code at the call site.",
+    { text: "orders_counter.add(...) executes inside the active span", options: { bold: true } },
+    "the auto-generated POST /orders root span, so every increment has a live trace context to attach.",
+    { text: "Exemplars generally attach to histogram buckets", options: { bold: true } },
+    "a counter like this one carries a single exemplar per data point instead, but the SDK attaches it the same way.",
+    { text: "Checking the counter before trusting the pipeline", options: { bold: true } },
+    "query Mimir for orders_placed_total directly to rule out a handler that never ran, before assuming the exemplar wiring is at fault.",
   ]);
-  addNotes(s, "In Grafana, a histogram panel backed by orders_fulfillment_duration_ms renders small diamond markers above the buckets where exemplars were captured, and clicking one jumps directly into the matching trace in Tempo — the same payoff the 101 deck described in the abstract, now backed by Python's actual recording call. What to show: a Mimir-backed latency panel with exemplar diamonds, clicked through to a trace.");
+  addNotes(s, "In Grafana, a panel backed by orders_placed_total renders small diamond markers above data points where exemplars were captured, and clicking one jumps directly into the matching trace in Tempo — the same payoff the 101 deck described in the abstract, now backed by Python's actual counter call. What to show: a Mimir-backed panel with exemplar diamonds, clicked through to a trace.");
 }
 
 // =============================================================================
@@ -411,7 +408,7 @@ divider("04", "Logs", "Structured JSON, trace_id stamped on, and a correlation b
     { text: "Reversing the call order silently breaks OTLP log export", options: { bold: true } },
     "because configure() resets the root logger's handler list; calling it after setup() wipes out the handler setup() just added.",
   ]);
-  addNotes(s, "This ordering constraint is a smaller cousin of the ENTRYPOINT ordering rule from the zero-code section: both are cases where Python's lack of a declarative, framework-managed bootstrap means the call order in a lifespan handler is load-bearing, not incidental. Every service in this tutorial calls obslog.configure() then otel.setup() in that order, in every lifespan function, for exactly this reason. What to show: nothing yet — the bug on the next slide is the real-world consequence of resource configuration, not handler ordering, going wrong.");
+  addNotes(s, "This ordering constraint is a smaller cousin of the ENTRYPOINT ordering rule from the zero-code section: both are cases where Python's lack of a declarative, framework-managed bootstrap means the call order in a lifespan handler determines whether export works at all. Every service in this tutorial calls obslog.configure() then otel.setup() in that order, in every lifespan function, for exactly this reason. What to show: nothing yet — the bug on the next slide is the real-world consequence of resource configuration, not handler ordering, going wrong.");
 }
 
 {
@@ -449,13 +446,13 @@ divider("04", "Logs", "Structured JSON, trace_id stamped on, and a correlation b
     "    service_name=os.getenv(\"OTEL_SERVICE_NAME\") or service_name",
     ")",
   ], "One line, and it generalizes: whenever identity is configurable from more than one place, every code path should read from the same source.", { fontSize: 16 });
-  addNotes(s, "This is the entire fix, and the generalization matters more than the specific bug: any setup wiring four exporters by hand re-creates a consistency problem that a single integrated agent solves automatically. The diagnostic habit worth taking from this — query Loki's label values for service_name and compare against Tempo's service list — catches this exact class of bug in under a minute, versus hours of assuming a signal that never exported rather than one that exported under the wrong name. What to show: curl -s -G 'http://localhost:3100/loki/api/v1/label/service_name/values' | jq . against a live stack.");
+  addNotes(s, "This is the entire fix, and the generalization matters more than the specific bug: any setup wiring four exporters by hand re-creates a consistency problem that a single integrated agent solves automatically. Querying Loki's label values for service_name and comparing against Tempo's service list catches this exact class of bug in under a minute, versus hours of assuming a signal that never exported rather than one that exported under the wrong name. What to show: curl -s -G 'http://localhost:3100/loki/api/v1/label/service_name/values' | jq . against a live stack.");
 }
 
 // =============================================================================
 // Section 05 — Baggage & Kafka
 // =============================================================================
-divider("05", "Baggage & Kafka", "cart.id rides for free over gRPC. Over Kafka, nothing rides for free.",
+divider("05", "Baggage & Kafka", "cart.id propagates automatically over gRPC. Over Kafka, it needs explicit code.",
   "Section divider. Baggage itself is language-agnostic (covered in the 101 deck); this section is about the one boundary in this stack where Python has no safety net at all. What to show: nothing yet.");
 
 {
@@ -490,7 +487,7 @@ divider("05", "Baggage & Kafka", "cart.id rides for free over gRPC. Over Kafka, 
     "headers exist since Kafka 0.11, but nothing in the broker enforces that a producer sets them or a consumer reads them.",
     { text: "aiokafka has no equivalent zero-code tracing instrumentation", options: { bold: true } },
     "at the time of writing — a gap, not an oversight, since its asyncio-native API doesn't fit the hook points most Kafka instrumentors target.",
-    { text: "Both Java stacks get this hop for free", options: { bold: true } },
+    { text: "Both Java stacks get this hop with no extra code", options: { bold: true } },
     "Spring Kafka and SmallRye Reactive Messaging both ship tracing support auto-instrumentation can enable. Python writes it by hand.",
   ]);
   addNotes(s, "This is the sharpest instance in the whole deck of a boundary where Python has no safety net: Java's two listener methods need zero tracing code either way, while Python's consumer loop needs real extraction code or the trace permanently breaks at the message boundary, not just for a toggle-driven demonstration. What to show: nothing yet — the actual module is next.");
@@ -498,7 +495,7 @@ divider("05", "Baggage & Kafka", "cart.id rides for free over gRPC. Over Kafka, 
 
 {
   const s = S();
-  addCodeSlide(s, "KAFKA · MANUAL PROPAGATION", "obs/kafka_propagation.py does by hand what the Java agent does automatically", "python", [
+  addCodeSlide(s, "KAFKA · MANUAL PROPAGATION", "Explicit Inject and Extract", "python", [
     "# services/python/order/src/obs/kafka_propagation.py",
     "def inject_headers(existing=None):",
     "    headers = list(existing or [])",
@@ -532,7 +529,7 @@ divider("05", "Baggage & Kafka", "cart.id rides for free over gRPC. Over Kafka, 
 // Section 06 — Profiling & packaging
 // =============================================================================
 divider("06", "Profiling & Packaging", "A plain import instead of a Java agent, and the uv/UBI10 toolchain underneath it.",
-  "Section divider. Closing section: the fourth signal, and the runtime decisions — uv, Python 3.14, UBI 10 — that make the rest of this deck's code actually run in a container. What to show: nothing yet.");
+  "Section divider. Closing section: the fourth signal, and the runtime decisions — uv, Python 3.14, UBI 10 — that make the preceding sections' code actually run in a container. What to show: nothing yet.");
 
 {
   const s = S();
