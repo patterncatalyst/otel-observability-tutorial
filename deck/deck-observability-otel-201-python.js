@@ -576,7 +576,7 @@ divider("A", "Appendix: Verifying It Live", "curl, kcat, and Loki/Tempo queries 
     { code: "Service identity", name: "Loki label values", purpose: "curl .../loki/api/v1/label/service_name/values — catches the service.name mismatch directly." },
     { code: "Kafka headers", name: "kcat -C -o beginning -e -f '%h'", purpose: "Confirms traceparent/baggage on the wire before trusting Tempo at all." },
     { code: "Baggage end to end", name: "Tempo search by tag", purpose: "curl '.../api/search?tags=cart.id=...' — one trace ID if propagation held across every hop." },
-    { code: "Exemplar wiring", name: "Mimir PromQL + Grafana", purpose: "histogram_quantile(0.99, ...) against orders_fulfillment_duration_ms_bucket, then click a diamond." },
+    { code: "Exemplar wiring", name: "Mimir PromQL + Grafana", purpose: "histogram_quantile(0.99, ...) against http_server_duration_milliseconds_bucket, then click a diamond." },
   ], { colW: [2.30, 2.90, 6.89] });
   addCaption(s, "docker compose -f stack/compose.yaml --profile python up -d --build");
   addNotes(s, "Each of these checks rules out a specific layer rather than staring at a dashboard and guessing: Loki's label endpoint catches a resource-identity mismatch in seconds; kcat rules out whole classes of consumer-side bugs by confirming the producer's behavior independently; the Tempo search confirms baggage propagated without reading a line of application code. What to show: run these live against the python compose profile if time allows — they are the fastest way to turn 'something looks wrong in Grafana' into a specific, fixable claim.");
