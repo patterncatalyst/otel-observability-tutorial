@@ -71,6 +71,8 @@ affected metric slower, sometimes slow enough to time out, which is often
 the first symptom an on-call engineer notices, long before anyone looks at
 a billing report.
 
+{% include excalidraw.html file="ch21-cardinality-explosion" alt="Diagram comparing two versions of the same counter http_requests_total. With a bounded label set of method, route, and status it produces about three thousand time series, with cheap storage and fast queries. Adding one unbounded label, user_id, turns the same counter into millions of time series, with high storage cost and slow dashboards. The metric definition looks nearly identical in both cases." caption="Figure 21.1 — One unbounded label turns a few thousand series into millions" %}
+
 ## Label hygiene as a design discipline
 
 Fixing cardinality after the fact is a scramble: hunting through dashboards
@@ -240,4 +242,4 @@ processing, and no sampling is not a more complete observability setup; it
 is a more expensive one, usually without a commensurate gain in what a
 human can actually use when debugging an incident.
 
-{% include excalidraw.html file="ch21-cost-controls" alt="Diagram showing metrics, logs, and traces flowing from services into an OpenTelemetry Collector where filter, aggregate, and attribute-drop processors reduce volume before it reaches backend storage" caption="Figure 21.1 — Controlling spend at the Collector, across all three signals" %}
+{% include excalidraw.html file="ch21-cost-controls" alt="Diagram showing metrics, logs, and traces flowing from services into an OpenTelemetry Collector where filter, aggregate, and attribute-drop processors reduce volume before it reaches backend storage" caption="Figure 21.2 — Controlling spend at the Collector, across all three signals" %}
