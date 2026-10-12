@@ -183,6 +183,8 @@ breaking a dashboard built against the old name.
 
 ## Further Reading
 
+> **About these books.** These are books we recommend, not books we wrote. We cite them as pointers into the originals; we do not copy from them, and this material is not a substitute for reading them. If a title is useful to you, please go read it in full.
+
 This tutorial focused on the mechanics: what to instrument, how the
 signals correlate, how to keep them affordable, and how to turn them into
 alerts that page the right person at the right time. The three books
