@@ -46,6 +46,9 @@ collections:
   parts:
     output: true
     permalink: /parts/:name/
+  example_pages:
+    output: true
+    permalink: /examples/:name/
 
 # Default front-matter — saves typing `layout: tutorial` on every doc.
 defaults:
@@ -66,6 +69,12 @@ defaults:
     values:
       layout: part_index
       sectionid: docs
+  - scope:
+      path: ""
+      type: example_pages
+    values:
+      layout: tutorial
+      sectionid: examples
 
 # Files/dirs Jekyll should not process or include in the built site. The code
 # trees (services/, stack/, proto/) and dev tooling (scripts/, .devcontainer/)
