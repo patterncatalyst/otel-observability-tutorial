@@ -48,14 +48,41 @@ later chapter layers a signal onto these same services.
 ## Demos
 
 Two scripts under [`demos/`](https://github.com/{{ site.github_username }}/{{ site.github_repo }}/tree/main/demos)
-generate telemetry and then confirm it landed. Run in a terminal they pause
-between steps and print the Grafana and LGTM URLs so you can follow along live;
-run non-interactively (CI, `PAUSE=0`) they skip the pauses.
+generate telemetry and then confirm it landed.
 
 | Demo | What it does |
 |---|---|
 | [`demos/drive-load.sh`](https://github.com/{{ site.github_username }}/{{ site.github_repo }}/tree/main/demos/drive-load.sh) | Places orders and runs GraphQL reads/mutations so every signal has data to show, then points you at Grafana |
 | [`demos/verify-signals.sh`](https://github.com/{{ site.github_username }}/{{ site.github_repo }}/tree/main/demos/verify-signals.sh) | Queries Tempo, Mimir, Loki, and Pyroscope directly to confirm traces, metrics, logs, and profiles all arrived |
+
+### Running the demos
+
+The demos drive and inspect a **running** system, so bring up the stack and one
+language track first (steps 1–2 of [Running an example](#running-an-example)
+below). Then, from the repo root, run the two scripts in order:
+
+```bash
+# 1. Generate telemetry — places 5 orders plus GraphQL calls.
+#    Pass a number to place more:  demos/drive-load.sh 20
+demos/drive-load.sh
+
+# 2. Confirm each signal (traces, metrics, logs, profiles) reached the backend.
+demos/verify-signals.sh
+```
+
+Run in a terminal, each script **pauses between steps** and prints the
+Grafana/LGTM URLs so you can open each signal as it appears — press **Enter** to
+advance. To run straight through with no pauses (CI, recordings, scripted runs),
+set `PAUSE=0`:
+
+```bash
+PAUSE=0 demos/drive-load.sh
+PAUSE=0 demos/verify-signals.sh
+```
+
+Both scripts point you at **Grafana → Explore** at
+[http://localhost:3000](http://localhost:3000), where traces, logs, metrics, and
+profiles are pre-wired for correlation.
 
 ## Running an example
 
