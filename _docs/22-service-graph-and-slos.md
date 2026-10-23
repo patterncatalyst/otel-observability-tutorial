@@ -25,7 +25,7 @@ every trace it receives and extract the calling relationships between
 services: Checkout calls Payments, Payments calls Inventory, Checkout also
 calls Shipping. Aggregated across a time window and across every trace that
 passed through the system, that same extraction produces something more
-useful than any single trace on its own — a graph of nodes (services) and
+useful than any single trace on its own: a graph of nodes (services) and
 edges (calls between them), each edge annotated with the volume, error
 rate, and latency distribution observed on that specific call path.
 
@@ -38,7 +38,7 @@ and metrics describing the edges of the graph come out, without any change
 to the instrumentation producing the spans. Tempo's own documentation
 describes the resulting graph as a way to see request rate, error rate, and
 duration for every edge in the topology, derived entirely from span data
-already being collected for tracing — see
+already being collected for tracing; see
 [opentelemetry.io/docs/collector](https://opentelemetry.io/docs/collector/)
 for how Collector connectors fit into this kind of cross-signal pipeline.
 
@@ -46,7 +46,7 @@ The value of a derived graph over a hand-maintained one is that it cannot
 drift out of date. A hand-drawn architecture diagram is accurate on the day
 someone draws it and increasingly wrong after that, as services are added,
 retired, or rewired to call each other differently. A graph built from
-live span data reflects whatever is actually calling what, this week,
+live span data reflects whatever is calling what, this week,
 including the temporary workaround nobody remembered to document and the
 new dependency a recent feature quietly introduced.
 
@@ -58,8 +58,8 @@ broken out by service name and operation name, without the services
 themselves needing to emit anything beyond the spans they already produce.
 The `spanmetrics` connector, the sibling of `servicegraph` in the
 Collector's contrib distribution, converts the three pieces of information
-every span already carries — that it happened, how long it took, and
-whether it ended in an error — into a request-rate counter, a duration
+every span already carries (that it happened, how long it took, and
+whether it ended in an error) into a request-rate counter, a duration
 histogram, and an error counter, tagged by service and operation.
 
 This matters because it collapses a maintenance burden that otherwise falls
@@ -74,14 +74,14 @@ every panel.
 ## The four golden signals
 
 Span metrics map directly onto a framework that predates OpenTelemetry but
-that OpenTelemetry instrumentation makes easy to populate: the four golden
+that OpenTelemetry instrumentation makes straightforward to populate: the four golden
 signals, popularized by Google's Site Reliability Engineering practice.
 Latency is how long a request takes, visible directly in the duration
 histogram span metrics produce. Traffic is how much demand a service is
 under, visible in the request-rate counter. Errors is the fraction of
 requests that fail, visible in the error counter divided by the request
-count. Saturation is how full a resource is relative to its capacity — CPU,
-memory, queue depth, connection pool usage — and while it is not derived
+count. Saturation is how full a resource is relative to its capacity (CPU,
+memory, queue depth, connection pool usage), and while it is not derived
 from spans the way the other three are, it is exactly the kind of signal
 the chapter on metrics already covers through runtime and resource
 instrumentation.
@@ -101,7 +101,7 @@ needing bespoke instrumentation for every failure mode in advance.
 A service-level objective turns a golden signal into a target: not "what is
 the error rate" but "the error rate must stay below half a percent, measured
 over a rolling thirty-day window." The service-level indicator (SLI) is the
-measured value — the ratio of successful requests to total requests, taken
+measured value: the ratio of successful requests to total requests, taken
 directly from span metrics. The SLO is the target set against that
 indicator, and the error budget is the amount of unreliability the SLO
 tolerates before it is breached: at 99.5% availability, a service is
@@ -116,7 +116,7 @@ the same span metrics already flowing through the system: how much of the
 error budget is left, and at the current burn rate, how long until it runs
 out. A service with budget to spare can ship riskier changes faster. A
 service burning through its budget needs to slow down and stabilize before
-taking on more risk — the entire tradeoff made visible by metrics that cost
+taking on more risk. The entire tradeoff is made visible by metrics that cost
 nothing extra to instrument, because they are projections of spans already
 being recorded.
 
@@ -131,22 +131,22 @@ never pages at all, until the error budget for the month is already gone.
 Burn-rate alerting fixes both problems by asking a different question: at
 the current rate of errors, how quickly is the error budget being consumed,
 relative to the time remaining in the window? A burn rate of one means the
-budget will be exhausted exactly at the end of the window — sustainable. A
+budget will be exhausted exactly at the end of the window: sustainable. A
 burn rate of ten means the budget will be gone in a tenth of the window,
 which for a thirty-day SLO is about three days: urgent enough to page
 immediately, even though the raw error rate at any single instant might
 look unremarkable. A common pattern pages on two burn-rate alerts at
-different sensitivities — a fast-burn alert over a short window (catching a
+different sensitivities: a fast-burn alert over a short window (catching a
 severe, sudden outage quickly) and a slow-burn alert over a longer window
-(catching a steady degradation that a short window would miss) — both
-computed from the same underlying span metrics, just aggregated over
+(catching a steady degradation that a short window would miss), both
+computed from the same underlying span metrics, aggregated over
 different time ranges.
 
 This is also where the four golden signals and the error-budget framing
 reinforce each other operationally. Traffic and saturation alerts catch
 capacity problems before they turn into latency or error problems. Latency
 and error alerts, tied to burn rate rather than a bare threshold, catch
-reliability problems at a pace that matches how urgently they actually
+reliability problems at a pace that matches how urgently they
 need a human, rather than how dramatic the raw number looks at a single
 point in time.
 
@@ -178,8 +178,8 @@ histogram_quantile(0.99,
 ```
 
 The service graph metrics the `servicegraph` connector emits follow a
-parallel shape, but keyed by the pair of services on each edge —
-`client` and `server` labels identify the calling and called service —
+parallel shape, but keyed by the pair of services on each edge:
+`client` and `server` labels identify the calling and called service,
 so the same kind of query answers "what is the error rate on the edge from
 Checkout to Payments specifically," which a single-service metric cannot
 answer on its own. This edge-level detail is often the fastest way to
@@ -221,9 +221,9 @@ groups:
                 / sum(rate(traces_spanmetrics_calls_total{service_name="checkout"}[5m]))
 ```
 
-The burn-rate thresholds themselves — which multiple of the baseline rate
-counts as "fast" versus "slow" — are a function of the SLO's target and
-window, not of Grafana; the rule file is just where that math gets encoded
+The burn-rate thresholds themselves, which multiple of the baseline rate
+counts as "fast" versus "slow", are a function of the SLO's target and
+window, not of Grafana; the rule file is where that math gets encoded
 once and then version-controlled like any other piece of the system. This
 mirrors the Collector configuration pattern used throughout the production
 concerns chapters: policy that used to live in someone's head, or in a
@@ -237,7 +237,7 @@ Grafana, the one visualization tool this agnostic track relies on. The
 service graph panel gives the shape of the system: what calls what, and
 where the slow or error-prone edges are, right now. The SLO panel gives
 the trend: how much error budget remains, and at what rate it is burning.
-Looking at both together answers a question neither answers alone — not
+Looking at both together answers a question neither answers alone: not
 just "is something broken" but "where in the topology is it broken, and
 how urgently does it need attention."
 
@@ -260,4 +260,4 @@ The investment already made in manual spans, auto-instrumentation, and
 consistent semantic conventions is what makes this layer close to free to
 build.
 
-{% include excalidraw.html file="ch22-service-graph" alt="Diagram showing spans from Checkout, Payments, Shipping, and Inventory services feeding a span metrics processor, which produces both a Tempo service graph and golden-signal SLO alerting" caption="Figure 22.1 — From spans to a service graph and SLO alerting" %}
+{% include excalidraw.html file="ch22-service-graph" alt="Diagram showing spans from Checkout, Payments, Shipping, and Inventory services feeding a span metrics processor, which produces both a Tempo service graph and golden-signal SLO alerting" caption="Figure 22.1: From spans to a service graph and SLO alerting" %}

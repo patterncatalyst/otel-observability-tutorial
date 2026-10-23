@@ -45,7 +45,7 @@ project that needs profiling now, and Pyroscope itself is investing in
 OTLP profile support rather than treating the two as competitors. The
 migration path, once OTLP profiles mature, looks like every other signal
 migration this tutorial has already described for moving between
-backends — a change to Collector configuration and SDK profile export
+backends: a change to Collector configuration and SDK profile export
 settings, not a rewrite of how a service is instrumented, provided the
 service's profiling data is already flowing through the Collector rather
 than directly to a profiling-specific backend with no OTLP mediation in
@@ -206,7 +206,7 @@ chapter originates, laid out in far more depth than a single chapter can
 cover, including how error budgets interact with release velocity and
 on-call practice at organizational scale.
 
-[*Building Resilient Distributed Systems*](https://www.oreilly.com/library/view/building-resilient-distributed/9781098163532/) — call it patterns for designing
+[*Building Resilient Distributed Systems*](https://www.oreilly.com/library/view/building-resilient-distributed/9781098163532/) covers patterns for designing
 systems that survive partial failure, which is the backdrop every signal
 in this tutorial exists to make visible. Traces, metrics, logs, and
 profiles do not make a system resilient on their own; they make it
@@ -242,4 +242,4 @@ That is the actual payoff of learning the mechanism rather than memorizing
 today's specific API surface: the next signal OpenTelemetry standardizes
 will fit into a pipeline already built to receive it.
 
-{% include excalidraw.html file="ch24-ecosystem" alt="Diagram showing OTLP profiles and the Pyroscope SDK converging toward OpenTelemetry core, alongside eBPF auto-instrumentation, with core radiating out to the Collector Contrib ecosystem, semantic conventions, and OpAMP and the wider ecosystem" caption="Figure 24.1 — OpenTelemetry's expanding signal and tooling surface" %}
+{% include excalidraw.html file="ch24-ecosystem" alt="Diagram showing OTLP profiles and the Pyroscope SDK converging toward OpenTelemetry core, alongside eBPF auto-instrumentation, with core radiating out to the Collector Contrib ecosystem, semantic conventions, and OpAMP and the wider ecosystem" caption="Figure 24.1: OpenTelemetry's expanding signal and tooling surface" %}
