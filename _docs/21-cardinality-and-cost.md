@@ -6,7 +6,7 @@ description: "How unbounded label and attribute values drive up storage and quer
 ---
 
 A dashboard that worked fine in a demo environment can start timing out, or
-simply vanish from a billing report as a six-figure line item, once it meets
+vanish from a billing report as a six-figure line item, once it meets
 real production traffic. The instrumentation code did not change. The volume
 and the shape of what it emits did. Cardinality is the single biggest lever
 on observability cost, and it is almost always invisible at the point where
@@ -17,14 +17,14 @@ cardinality, log volume and retention, and trace volume. Each has its own
 failure mode and its own fix, and all three get cheaper to fix the earlier
 the Collector gets a say in what leaves the building.
 
-## What cardinality actually means
+## What cardinality means
 
 A metric is not one time series. It is a family of time series, one for
 every unique combination of label values attached to it. A counter named
 `http_requests_total` with labels `method`, `route`, and `status_code` does
 not produce one stream of numbers; it produces one stream per combination
 that has ever been observed: `GET /cart 200`, `POST /checkout 500`,
-`GET /cart 404`, and so on. The metrics backend — Mimir in this stack — has to allocate storage, an index
+`GET /cart 404`, and so on. The metrics backend (Mimir in this stack) has to allocate storage, an index
 entry, and query-time bookkeeping for every one of those series, forever,
 until it ages out under the retention policy.
 
@@ -33,7 +33,7 @@ HTTP method has seven or eight possible values. Route, if it is the
 templated path (`/cart/{id}`) rather than the literal URL, might have a few
 dozen. Status code has a few hundred, and in practice a service exercises a
 few dozen of them. Multiply those together and a well-behaved
-instrumentation surface produces a few thousand series — comfortable for
+instrumentation surface produces a few thousand series: comfortable for
 any metrics backend built in the last decade.
 
 The failure mode is a label whose value set is open-ended: a raw user ID,
@@ -60,18 +60,18 @@ adding a label to a metric, ask whether you could enumerate every value it
 will ever take. If the answer is no, it does not belong on that
 metric.
 
-Cardinality has a second cost that is easy to miss because it shows up as
+Cardinality has a second cost that is subtle because it shows up as
 latency rather than as a line item: query performance. A query that asks
 for the error rate of one route has to scan and aggregate across every
 series that matches, and the more series there are, the more work the
 query engine does to collapse them back down into the single number or
-line a dashboard actually displays. A cardinality explosion does not just
+line a dashboard displays. A cardinality explosion does not just
 make storage expensive; it makes every dashboard built on top of the
 affected metric slower, sometimes slow enough to time out, which is often
 the first symptom an on-call engineer notices, long before anyone looks at
 a billing report.
 
-{% include excalidraw.html file="ch21-cardinality-explosion" alt="Diagram comparing two versions of the same counter http_requests_total. With a bounded label set of method, route, and status it produces about three thousand time series, with cheap storage and fast queries. Adding one unbounded label, user_id, turns the same counter into millions of time series, with high storage cost and slow dashboards. The metric definition looks nearly identical in both cases." caption="Figure 21.1 — One unbounded label turns a few thousand series into millions" %}
+{% include excalidraw.html file="ch21-cardinality-explosion" alt="Diagram comparing two versions of the same counter http_requests_total. With a bounded label set of method, route, and status it produces about three thousand time series, with cheap storage and fast queries. Adding one unbounded label, user_id, turns the same counter into millions of time series, with high storage cost and slow dashboards. The metric definition looks nearly identical in both cases." caption="Figure 21.1: One unbounded label turns a few thousand series into millions" %}
 
 ## Label hygiene as a design discipline
 
@@ -82,8 +82,8 @@ hygiene applied up front is cheap by comparison, and it comes down to a
 short set of habits.
 
 Favor templated routes over literal paths. A web framework that already
-knows the route template — `/orders/{orderId}` rather than
-`/orders/8f21ac`— should report the template, with the identifier left for
+knows the route template (`/orders/{orderId}` rather than
+`/orders/8f21ac`) should report the template, with the identifier left for
 the span or the log line where it is a single occurrence, not a
 multiplying label.
 
@@ -101,10 +101,10 @@ trace and a log line; the point for this chapter is narrower: that
 identifier should never also become a metric label.
 
 Review new labels as part of code review, the same way a schema change
-would be reviewed. A reviewer who knows the question — "what is the set of
-values this can take, and is it bounded?" — catches almost every
+would be reviewed. A reviewer who knows the question, "what is the set of
+values this can take, and is it bounded?", catches almost every
 cardinality problem before it reaches production, because the answer is
-usually obvious once asked out loud.
+usually clear once asked out loud.
 
 ## Log volume and retention
 
@@ -120,7 +120,7 @@ priced by the gigabyte ingested and the number of days retained.
 Three controls matter here, and they compound. First, log level discipline:
 `DEBUG` and `TRACE` levels belong in development and in short-lived
 diagnostic windows, not as the steady-state production level. Second,
-sampling or deduplication of repetitive lines — a retry loop that
+sampling or deduplication of repetitive lines: a retry loop that
 logs the same warning on every attempt is better served by logging once
 with a count than logging every attempt. Third, retention tiering: not
 every log needs the same number of days online. Security and audit logs
@@ -131,8 +131,8 @@ multi-month cost reduction usually comes from, not from trimming what gets
 logged in the first place.
 
 It is worth separating "logging too much" from "indexing too much." Loki's
-label-based indexing model means the labels attached to a log stream — not
-the content of the line — determine query performance and a meaningful
+label-based indexing model means the labels attached to a log stream, not
+the content of the line, determine query performance and a meaningful
 share of storage overhead. A label that varies per request, the same
 cardinality mistake as with metrics, turns a log stream into thousands of
 tiny streams and defeats the compression that makes Loki affordable in the
@@ -150,8 +150,8 @@ Capturing a full trace for every request is viable at modest traffic and
 becomes untenable quickly as request volume grows, which is exactly the
 problem the chapter on sampling addresses directly: head and tail sampling
 strategies decide which traces are worth keeping before they ever reach
-storage. That mechanism will not be repeated here, but the connection is
-worth naming explicitly, because trace volume is a cost lever that sits
+storage. That mechanism will not be repeated here, but the connection
+matters, because trace volume is a cost lever that sits
 upstream of everything else described here. A service
 emitting one hundred percent of its traces is also the top candidate for
 runaway Tempo storage, independent of how clean its span attributes are.
@@ -177,7 +177,7 @@ enforce these decisions, because it applies them centrally, without
 redeploying every service that emits telemetry.
 
 A `filter` processor in the Collector pipeline can drop entire signals,
-spans, or log records that match a condition — health check traces, for
+spans, or log records that match a condition: health check traces, for
 instance, which are high in volume and low in diagnostic value, are a
 common target for being filtered out before they reach Tempo.
 
@@ -205,9 +205,9 @@ goes further: it can rewrite a high-cardinality attribute into a bucketed
 or templated form instead of deleting it outright, preserving some
 diagnostic value while still bounding the cardinality.
 
-For metrics specifically, the Collector's aggregation capabilities —
+For metrics specifically, the Collector's aggregation capabilities,
 either through a dedicated aggregation processor or through careful use of
-views at the SDK level, which the Collector then just forwards — let a
+views at the SDK level which the Collector then forwards, let a
 team decide that a metric needs an application-wide total, not a
 per-instance or per-pod breakdown, cutting the series count by the number
 of running replicas without losing the number that matters for alerting.
@@ -240,6 +240,6 @@ whether it is just forwarding everything it receives or actively deciding
 what is worth keeping. A pipeline with no filtering, no attribute
 processing, and no sampling is not a more complete observability setup; it
 is a more expensive one, usually without a commensurate gain in what a
-human can actually use when debugging an incident.
+human can use when debugging an incident.
 
-{% include excalidraw.html file="ch21-cost-controls" alt="Diagram showing metrics, logs, and traces flowing from services into an OpenTelemetry Collector where filter, aggregate, and attribute-drop processors reduce volume before it reaches backend storage" caption="Figure 21.2 — Controlling spend at the Collector, across all three signals" %}
+{% include excalidraw.html file="ch21-cost-controls" alt="Diagram showing metrics, logs, and traces flowing from services into an OpenTelemetry Collector where filter, aggregate, and attribute-drop processors reduce volume before it reaches backend storage" caption="Figure 21.2: Controlling spend at the Collector, across all three signals" %}

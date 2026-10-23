@@ -11,7 +11,7 @@ That identifier is `trace_id`. The OpenTelemetry SDK generates one when a trace 
 
 ## Where the links live
 
-The stack in this tutorial provisions its datasources from `stack/grafana/datasources.yaml`, mounted into the Grafana container's provisioning directory. That file defines four datasources — Tempo, Loki, Prometheus, and Pyroscope — and each one carries a block of `jsonData` describing how to jump to the others. Nothing about the application services needs to know this file exists. The links appear in the Grafana UI the moment the container starts, because Grafana reads its provisioning directory on boot and wires the datasources accordingly.
+The stack in this tutorial provisions its datasources from `stack/grafana/datasources.yaml`, mounted into the Grafana container's provisioning directory. That file defines four datasources (Tempo, Loki, Prometheus, and Pyroscope) and each one carries a block of `jsonData` describing how to jump to the others. Nothing about the application services needs to know this file exists. The links appear in the Grafana UI the moment the container starts, because Grafana reads its provisioning directory on boot and wires the datasources accordingly.
 
 This matters for the same reason the Collector chapter argues that cross-cutting decisions belong outside application code: four backend teams write and redeploy independently of the person who decides how their signals should cross-reference each other. Put the decision in the Collector and the datasource provisioning rather than in each service, and it changes in one place.
 
@@ -140,6 +140,6 @@ Every one of these links depends on the same precondition: a trace context that 
 
 None of the correlation configuration in this chapter runs any code. It is declarative, provisioned once, and applies to every service that follows the shared conventions, which is exactly why it belongs in the datasource layer rather than scattered across application repositories: one file, reviewed once, grants a cross-signal investigation to every engineer who opens Grafana afterward.
 
-{% include excalidraw.html file="ch16-correlation" alt="Diagram of a single trace_id connecting Tempo, Loki, Mimir, and Pyroscope datasources into one Grafana pane via tracesToLogsV2, derived fields, exemplars, and tracesToProfiles" caption="Figure 16.1 — One trace_id, four signals, one Grafana pane" %}
+{% include excalidraw.html file="ch16-correlation" alt="Diagram of a single trace_id connecting Tempo, Loki, Mimir, and Pyroscope datasources into one Grafana pane via tracesToLogsV2, derived fields, exemplars, and tracesToProfiles" caption="Figure 16.1: One trace_id, four signals, one Grafana pane" %}
 
 Further reading: the [OpenTelemetry documentation](https://opentelemetry.io/docs/) covers context propagation and the trace/log correlation model that this provisioning depends on, in the sections on [traces](https://opentelemetry.io/docs/concepts/signals/traces/) and [context propagation](https://opentelemetry.io/docs/concepts/context-propagation/).
