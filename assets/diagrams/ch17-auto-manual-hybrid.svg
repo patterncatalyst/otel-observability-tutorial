@@ -4,19 +4,19 @@
 <text x="480.0" y="125.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Auto-instrumentation (Chapter 8)</text>
 <rect x="40" y="90" width="210" height="85" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
 <text x="145.0" y="123.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">POST /orders</text>
-<text x="145.0" y="140.0" font-size="11.5" fill="#555555" text-anchor="middle">REST span — auto</text>
+<text x="145.0" y="140.0" font-size="11.5" fill="#555555" text-anchor="middle">REST span: auto</text>
 <text x="145.0" y="155.0" font-size="11.5" fill="#555555" text-anchor="middle">agent / extension / zero-code</text>
 <rect x="270" y="90" width="210" height="85" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
 <text x="375.0" y="130.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">CheckStock, Authorize</text>
-<text x="375.0" y="147.5" font-size="11.5" fill="#555555" text-anchor="middle">gRPC client+server — auto</text>
+<text x="375.0" y="147.5" font-size="11.5" fill="#555555" text-anchor="middle">gRPC client+server: auto</text>
 <rect x="500" y="90" width="210" height="85" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
 <text x="605.0" y="130.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Postgres / asyncpg</text>
-<text x="605.0" y="147.5" font-size="11.5" fill="#555555" text-anchor="middle">DB client span — auto</text>
+<text x="605.0" y="147.5" font-size="11.5" fill="#555555" text-anchor="middle">DB client span: auto</text>
 <rect x="730" y="90" width="210" height="85" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
 <text x="835.0" y="130.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">order.placed publish</text>
-<text x="835.0" y="147.5" font-size="11.5" fill="#555555" text-anchor="middle">header injection — auto</text>
+<text x="835.0" y="147.5" font-size="11.5" fill="#555555" text-anchor="middle">header injection: auto</text>
 <rect x="20" y="220" width="920" height="190" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
-<text x="480.0" y="320.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Hand-placed (Chapter 9) — business meaning</text>
+<text x="480.0" y="320.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Hand-placed (Chapter 9): business meaning</text>
 <rect x="40" y="260" width="280" height="120" rx="9" fill="#fdecec" stroke="#ee0000" stroke-width="2"/>
 <text x="180.0" y="303.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">cart.id baggage attribute</text>
 <text x="180.0" y="320.0" font-size="11.5" fill="#555555" text-anchor="middle">Span.current().setAttribute()</text>
@@ -26,7 +26,7 @@
 <text x="490.0" y="303.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Kafka consumer span (Python)</text>
 <text x="490.0" y="320.0" font-size="11.5" fill="#555555" text-anchor="middle">start_as_current_span()</text>
 <text x="490.0" y="335.0" font-size="11.5" fill="#555555" text-anchor="middle">extract_context(msg.headers)</text>
-<text x="490.0" y="350.0" font-size="11.5" fill="#555555" text-anchor="middle">Java gets this one for free</text>
+<text x="490.0" y="350.0" font-size="11.5" fill="#555555" text-anchor="middle">Java gets this one automatically</text>
 <rect x="660" y="260" width="280" height="120" rx="9" fill="#fdecec" stroke="#ee0000" stroke-width="2"/>
 <text x="800.0" y="303.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">GraphQL resolver spans</text>
 <text x="800.0" y="320.0" font-size="11.5" fill="#555555" text-anchor="middle">review.resolve_reviews(), etc.</text>
