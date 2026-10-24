@@ -5,6 +5,18 @@ part: "The demo application"
 description: "The order, inventory, payment, shipping, notification, and review services this tutorial instruments, and how a single order request moves through them."
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Name the six demo services, the responsibility each one owns, and the protocol it's reached over
+- Trace how a single `POST /orders` request fans out across two gRPC calls, a Kafka event, and the shared Postgres schema
+- Read the `InventoryService` and `PaymentService` protobuf contracts and explain why both RPCs are idempotent on `order_id`
+- Explain why gRPC propagates trace context automatically while the Kafka hop needs it added by hand
+- Identify which schema columns are safe metric-label candidates and which are cardinality risks
+
+## Why this matters
+
 Every signal this tutorial covers (a trace, a metric, a log line, a profile) only means something in the context of a system producing it. Before wiring up instrumentation, it helps to know exactly what that system does, what data it owns, and which protocol connects each pair of services. This chapter lays out the demo application: six services, four kinds of inter-service calls, one shared database, and a single customer action that fans out across all of them. Every later chapter's traces, metrics, and logs come from this domain, so the schema and protocols introduced here are the ground truth every later chapter keeps referring back to.
 
 ## Six services, one storefront

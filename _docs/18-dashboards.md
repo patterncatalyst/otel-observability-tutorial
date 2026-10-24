@@ -5,6 +5,18 @@ part: "Making signals useful"
 description: "Provisioned dashboards as code, the RED and USE methods, and what a service dashboard needs to answer the first on-call question."
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Explain how Grafana's file-based dashboard provider turns JSON on disk into live dashboards with no manual import step
+- Apply the RED method (rate, errors, duration) to build a request-driven service dashboard
+- Apply the USE method (utilization, saturation, errors) to build a dashboard for shared infrastructure
+- Build RED panel queries, rate, error ratio, and latency percentiles, from the HTTP server duration histogram
+- Pull, validate, and version dashboard JSON from the command line instead of the Grafana UI
+
+## Why this matters
+
 Everything built up to this chapter, the traces, the metrics, the logs, the correlation links between them, exists to answer one recurring question faster than reading raw query results would: is this service healthy right now, and if not, where does it hurt? A dashboard is the answer to that question compressed into a single screen that does not require typing a query first. Grafana is the one graphical interface this tutorial relies on anywhere in the stack; everything upstream of it, from instrumentation to Collector configuration to sampling policy, is driven by files and CLI tools. Dashboards are where that discipline pays off, because a dashboard built from the same metric names, trace attributes, and log labels established earlier renders correctly the first time, with no guessing at what a panel's query should say.
 
 ## Dashboards as code

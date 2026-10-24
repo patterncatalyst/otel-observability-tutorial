@@ -5,6 +5,18 @@ part: "Making signals useful"
 description: "A decision framework for what auto-instrumentation already covers, what to add by hand, and how the hybrid looks in each of the three stacks."
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Distinguish the three hybrid instrumentation shapes: enriching an existing span, creating a span from scratch, and adding a business-level metric
+- Identify which auto-instrumentation mechanism each stack uses, Java agent, build-time extension, or zero-code launcher, and what it already covers
+- Apply the `cart.id` baggage pattern to enrich an auto-instrumented span across Spring Boot, Quarkus, and Python without creating a new span
+- Recognize where auto-instrumentation stops, Python's async Kafka boundary and GraphQL resolvers among them, and add the manual span that belongs there
+- Read a span's instrumentation scope in a trace to tell whether it was auto-generated or hand-written
+
+## Why this matters
+
 By this point in the tutorial, every service has been instrumented twice, once by an agent or extension that needed no application code, and once by a handful of lines a developer wrote by hand. Chapter 8 covered the first kind, chapter 9 covered the second, and this chapter is where the two stop being separate topics. The question a team faces is never "auto or manual." It is narrower and more useful: given that auto-instrumentation already covers most of the request, what is left to add, and where, exactly, does it belong?
 
 What this codebase shows is that the hybrid takes two different shapes, not one. Where auto-instrumentation already creates a span for a hop, the manual work is enrichment: attaching a business fact as an attribute on a span that already exists. Where auto-instrumentation does not reach, because a library has no instrumentor, or because a boundary is async and the auto path stops at the function call that enqueues the message, the manual work is a span from scratch: naming an operation and threading propagated context into it by hand. A third shape sits alongside both of these on the metrics side: a protocol-level metric like request duration comes from the same auto-instrumentation that produced the span, while a metric that counts a business outcome, an order placed with a particular status, has to be created and incremented by application code, because no instrumentor can infer what counts as a meaningful business event from an HTTP status code alone. None of these three are "hybrid instrumentation" in the same sense, and confusing them is the most common way a team either writes code nobody needed or discovers a gap nobody meant to leave.

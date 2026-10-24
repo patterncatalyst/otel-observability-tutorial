@@ -5,6 +5,18 @@ part: "Making signals useful"
 description: "Head sampling versus tail sampling, the tail-sampling Collector config, and what each approach costs you in traces you never see."
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Contrast head sampling's trace-ID coin flip against tail sampling's buffer-then-decide approach, and what each costs
+- Configure `parentbased_traceidratio` head sampling from SDK environment variables alone, with no code change
+- Read and order a `tail_sampling` processor's policies, errors, latency, critical routes, and a probabilistic baseline, so the right trace wins
+- Size `decision_wait`, `num_traces`, and `memory_limiter` for a tail-sampling Collector configuration
+- Verify tail-sampling policies are working using the Collector's own internal metrics rather than a service's logs or dashboards
+
+## Why this matters
+
 Every trace this tutorial has generated so far has been kept, in full, by every backend. That is fine at demo scale, a handful of services handling test traffic, but it does not survive contact with production volume. A service handling a few hundred requests per second generates tens of millions of spans a day; a fleet of services generates billions. Storing every one of them, indexed, forever, costs real money, and most of those traces look exactly like the last one: a successful request, fast, unremarkable. Sampling is the decision about which traces are worth keeping, and where in the pipeline that decision gets made changes what you are able to keep.
 
 ## Head sampling: deciding at the start

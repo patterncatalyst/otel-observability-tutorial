@@ -5,6 +5,18 @@ part: "Making signals useful"
 description: "Linking traces, logs, metrics, and profiles in Grafana through a shared trace_id and the datasource provisioning that wires it together."
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Trace how a shared `trace_id` links a span in Tempo to its logs in Loki, its metric exemplar in Mimir, and its CPU profile in Pyroscope
+- Configure the Grafana datasource provisioning (`tracesToLogsV2`, derived fields, `tracesToMetrics`, exemplars, `tracesToProfiles`) that wires those links together
+- Explain why exemplars, not per-request labels, are what let a metric spike link back to one concrete trace without inflating cardinality
+- Call Loki, Prometheus, and Tempo's HTTP APIs directly to verify a correlation link is actually broken, bypassing Grafana's UI
+- Diagnose a broken correlation link by checking for a dropped trace context or a mismatched attribute name between signals
+
+## Why this matters
+
 A single slow checkout request produces four separate records: a trace in Tempo, log lines in Loki, a histogram observation in Mimir, and a CPU profile in Pyroscope. Each one answers a different question. The trace shows which service ate the latency. The logs show what that service was doing at the moment it stalled. The metric shows whether this was a one-off or the start of a trend. The profile shows which function was actually burning CPU. Taken separately, these four views are four separate investigations, each starting from a blank query box. Taken together, tied by one identifier, they become a single investigation with four tabs.
 
 That identifier is `trace_id`. The OpenTelemetry SDK generates one when a trace starts and propagates it through context to every span, every log record emitted inside that context, and every metric exemplar recorded while a trace is active. Correlation in Grafana is the practice of teaching each datasource where to find that identifier in the others, so a click in one view opens the matching view with the right query already filled in. None of this requires application code. It is entirely provisioning: a block of YAML, read once at startup, that tells Grafana how the datasources relate to each other.

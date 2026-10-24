@@ -5,6 +5,18 @@ part: "The demo application"
 description: "The order, inventory, payment, review, shipping, and notification services running with telemetry off: REST, gRPC, GraphQL, and Kafka in their plainest form, before Part 3 turns the signals on."
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Explain how each runtime (Spring Boot's Java agent, Quarkus's build-time extension, Python's no-op tracer) turns telemetry off without touching application code
+- Trace the REST, gRPC, GraphQL, and Kafka paths through order, inventory, payment, review, shipping, and notification before any instrumentation is added
+- Identify why the inventory `Reserve` and payment `Authorize` RPCs are built idempotent on `(order_id, sku)` and `order_id`, and connect that to the order service's five-attempt retry loop
+- Anticipate the specific gap automatic instrumentation will hit later with GraphQL (one `POST /graphql` endpoint hides every operation) and Kafka (no built-in trace-context propagation)
+- Confirm, using Grafana and kcat, that a running baseline produces zero traces, metrics, or logs
+
+## Why this matters
+
 Chapter 5 described six services and four protocols. Chapter 6 brought up the infrastructure they all share. This chapter is where those services actually run for the first time, in all three languages, with every one of this book's observability signals switched off. [`OTEL_SDK_DISABLED=true`](https://opentelemetry.io/docs/specs/otel/configuration/sdk-environment-variables/) is the single toggle that makes that true: every service in this repository ships with its tracing, metrics, and logging code already written, because Spring Boot, Quarkus, and Python each need that code built the same way regardless of when in the book it gets switched on. What this chapter changes is not the code, but whether the SDK behind that code does anything at all.
 
 That distinction matters more than it sounds. A tutorial that showed you a separate, hand-trimmed "before" version of each service (with the OpenTelemetry imports deleted, the Java agent left off the classpath, the `opentelemetry-instrument` wrapper removed from the entrypoint) would misrepresent how real migrations happen. Nobody instruments a production service by writing it twice. They flip a switch, point an SDK at a collector, and start seeing data from code that was already running. This chapter's baseline is that same flip in the off position: one codebase, one environment variable, nothing landing in Grafana.

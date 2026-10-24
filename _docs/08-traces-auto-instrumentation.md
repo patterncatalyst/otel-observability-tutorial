@@ -5,6 +5,18 @@ part: "The signals"
 description: "One POST /orders request, three ways to get its first end-to-end trace with zero application code: a Java agent, a build-time extension, and a zero-code launcher."
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Get an end-to-end trace for `POST /orders` on all three stacks without writing any tracing code
+- Attach the OpenTelemetry Java agent to a Spring Boot service via `-javaagent`, and explain why the framework-specific starter doesn't work on Boot 4.1.x
+- Wire `quarkus-opentelemetry`'s build-time extension and map its `quarkus.otel.*` keys to the plain `OTEL_*` environment variables the rest of the stack sets
+- Launch a Python service with `opentelemetry-instrument` and add the manual `GrpcAioInstrumentorClient`/`GrpcAioInstrumentorServer` registration an asyncio gRPC stack needs
+- Compare the startup cost, configuration surface, and failure mode (silent non-export vs. a startup banner) of each attach mechanism
+
+## Why this matters
+
 Send the same request to three different stacks and get the same trace shape back. That is the claim this chapter has to earn: `POST /orders` on the Spring Boot, Quarkus, and Python implementations from Chapter 7 all fan out across the same four hops: a REST entry point, two outbound gRPC calls (`CheckStock` against inventory, `Authorize` against payment), a Postgres insert, and a Kafka publish to `order.placed`. In every case, Grafana's Tempo should show one trace spanning all four, without a single line of tracing code added to `OrderController`, `OrderResource`, or `order/main.py`. None of those files import an OpenTelemetry package for this to work. The trace comes entirely from how each service is *started*, not from anything written inside it.
 
 That "how it's started" is where the three languages diverge, and the divergence is the subject of this chapter. Spring Boot gets its trace from a Java agent attached at the JVM level. Quarkus gets it from an extension compiled into the application at build time. Python gets it from a launcher that wraps the process at startup. All three produce the [same instrumented span structure](https://opentelemetry.io/docs/concepts/instrumentation/automatic/) that OpenTelemetry's automatic-instrumentation model describes: spans created by someone else's code, following [semantic conventions](https://opentelemetry.io/docs/concepts/semantic-conventions/) you didn't write. The mechanism that produces them, and the one place each mechanism needs help from you, differ enough that debugging a missing span means knowing which of the three you're looking at.

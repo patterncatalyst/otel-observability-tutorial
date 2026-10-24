@@ -5,6 +5,18 @@ part: "Foundations"
 description: "Monitoring answers the questions you planned for; observability answers the ones you didn't, and why that distinction is worth a new vocabulary."
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Distinguish monitoring from observability by what each one can answer after an incident is already underway
+- Explain known-unknowns and unknown-unknowns, and why high-cardinality data is what makes the second kind answerable
+- Name the five OpenTelemetry signals (traces, metrics, logs, baggage, profiles) and the question each one answers
+- Describe the time cost of correlating telemetry by hand versus through connected signals during an incident
+- Explain why this tutorial standardizes on OpenTelemetry and the Grafana LGTM stack instead of a vendor-specific agent
+
+## Why this matters
+
 A production incident rarely announces itself as the failure mode you dashboarded for. The database connection pool dashboard is green, CPU is nowhere near its limit, and the error rate alert hasn't fired, yet checkout is taking eleven seconds for a slice of customers and nobody can say why. Every piece of monitoring that was built in advance is telling the truth and none of it is useful, because the question on the table, "why is this specific slice of traffic slow," was never anticipated as a question worth a dashboard.
 
 That gap between what monitoring tells you and what you need to know in the moment is where observability starts. It is a different relationship to the unknown, more than a rebrand of monitoring or a fancier dashboard.

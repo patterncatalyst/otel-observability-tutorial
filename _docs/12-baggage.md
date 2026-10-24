@@ -5,6 +5,18 @@ part: "The signals"
 description: "Propagating business context such as cart.id across service boundaries with W3C Baggage, reading it back as a span attribute, and the cardinality cost of getting that wrong."
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Explain why a baggage entry does nothing visible in Tempo until it is explicitly attached to a span as an attribute
+- Set a baggage entry once at a service boundary and trace its automatic propagation across downstream gRPC calls
+- Read baggage back in a downstream service and attach it to the current span for cross-service correlation
+- Decode the W3C Baggage wire format directly from an HTTP or gRPC metadata header
+- Apply the cardinality rule that keeps baggage safe: fine as a span attribute, dangerous as a metric label
+
+## Why this matters
+
 A trace tells you what happened across a request. It does not, by default, carry any of the business context that made the request meaningful: which customer, which cart, which tenant. A span for `Reserve` in the inventory service knows it reserved three units of a SKU; it does not know, unless something tells it, which shopping cart that reservation belongs to. Baggage is the OpenTelemetry mechanism for carrying exactly that kind of contextual key-value data alongside a trace, from the service that knows it to every downstream service in the call chain, without requiring each intermediate service to understand or pass along a bespoke field.
 
 This chapter covers baggage as implemented in this tutorial's order flow: `cart.id`, set once when an order request arrives, read by the inventory and payment services several hops later, and recorded on their spans as an attribute. It also covers why baggage and span attributes are not interchangeable, and the cost caution that comes with baggage's biggest feature: it propagates everywhere, whether you want it to or not.

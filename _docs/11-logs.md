@@ -5,6 +5,18 @@ part: "The signals"
 description: "Structured logs carrying trace_id and span_id into Loki, and the one resource attribute all four signals must agree on for correlation to work."
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Explain why stamping `trace_id`/`span_id` onto log records beats a request ID threaded by hand or timestamp-based correlation
+- Identify the mechanism each stack uses to populate those fields: the Java agent's Logback MDC instrumentation, Quarkus's `quarkus-opentelemetry` log bridge, and Python's `TraceContextFilter` plus `LoggingHandler`
+- Trace a log record's path from any of the three services, over OTLP, through the Collector's single logs pipeline, into Loki
+- Diagnose and fix a `service.name` mismatch between signals, the exact bug this repository's Python services shipped
+- Verify log-to-trace correlation from the outside with Loki's label API and a `trace_id`-filtered LogQL query
+
+## Why this matters
+
 A log line without a trace ID is an island. It tells you something happened, roughly when, and at what severity, but it cannot tell you which request caused it, what else happened in that same request, or how it relates to the span that was active at the time. The fix is not a new logging framework. It is attaching two fields, `trace_id` and `span_id`, to every log record emitted while a trace is active, so a line in Loki and a span in Tempo can be joined by an identifier instead of a guess about timestamps. This chapter covers how each of the three stacks in this tutorial gets those fields onto the record and ships the result to Loki, and it covers a bug that shipped in this very repository's Python services: a single resource attribute, `service.name`, that every signal has to agree on, or the whole correlation chain breaks silently.
 
 ## Why trace-stamped logs instead of a smarter log search

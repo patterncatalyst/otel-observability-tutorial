@@ -5,6 +5,18 @@ part: "Production concerns"
 description: "How unbounded label and attribute values drive up storage and query cost across metrics, logs, and traces, and how to control spend at the Collector."
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Explain how an unbounded label value turns a single metric into millions of time series
+- Apply label hygiene practices (templated routes, bucketed histograms, pushing identifiers down to spans and logs) to keep metric cardinality bounded
+- Distinguish log volume and retention costs from metric cardinality costs, and keep Loki stream labels bounded
+- Control trace volume through sampling and span attribute hygiene
+- Configure Collector `filter`, `attributes`, and `transform` processors to enforce cost control centrally, across every service and language
+
+## Why this matters
+
 A dashboard that worked fine in a demo environment can start timing out, or
 vanish from a billing report as a six-figure line item, once it meets
 real production traffic. The instrumentation code did not change. The volume

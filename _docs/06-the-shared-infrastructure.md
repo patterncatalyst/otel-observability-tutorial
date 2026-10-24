@@ -5,6 +5,18 @@ part: "The demo application"
 description: "The one compose.yaml all three language tracks build on: service-name DNS, healthchecks, the x-service-env anchor, and per-language profiles."
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Explain how one `stack/compose.yaml` serves three language tracks through Compose profiles without duplicating infrastructure
+- List which services start with no profile selected and which require `--profile tools` or a language profile
+- Explain how service-name DNS and healthcheck-gated `depends_on` let domain services find and wait on Postgres, Kafka, and the `lgtm` container
+- Read the `x-service-env` anchor and explain what `OTEL_SDK_DISABLED` and `PROPAGATE_KAFKA_CONTEXT` toggle
+- Decide when to bring up the shared Compose stack versus relying on Testcontainers or Quarkus Dev Services
+
+## Why this matters
+
 Chapter 5 described six services and four protocols without saying a word about where any of it runs. That is because the infrastructure underneath the domain is shared across all three language implementations rather than reinvented per track. One `compose.yaml`, written once against the Compose Specification, provides Postgres, Kafka, and the full observability backend for the Spring Boot, Quarkus, and Python versions of the demo alike. That one file is the subject here: how its services are named and wired, what starts by default versus what a reader has to opt into, and how the same infrastructure definition produces three independently runnable language tracks without three copies of the Compose file.
 
 ## One file, three language tracks

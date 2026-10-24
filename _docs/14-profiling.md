@@ -5,6 +5,18 @@ part: "The signals"
 description: "Continuous profiling as a runtime signal: attaching the Grafana Pyroscope agent or SDK in each stack, the Quarkus LogManager ordering gotcha, and where OTLP profiles fit in."
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Explain what profiling adds as a fourth signal: which function the CPU was executing inside a slow span
+- Attach the Pyroscope agent in Java or the Pyroscope SDK in Python to a service, gated on whether `PYROSCOPE_ADDRESS` is set
+- Diagnose the Quarkus LogManager ordering gotcha and apply the `-Djava.util.logging.manager` fix
+- Read a `process_cpu` flame graph in Pyroscope or Grafana and interpret frame width as CPU time
+- Verify the profiling pipeline end to end with Pyroscope's own HTTP API, independent of Grafana
+
+## Why this matters
+
 Every signal so far has answered a question about one request. A trace shows which service a request visited and how long each hop took. A log line shows what a service was doing at a specific moment. A metric shows whether a pattern held across many requests. None of them answer a narrower, more mechanical question: inside the slow span, which function was the CPU actually executing? Profiling is the fourth signal in this tutorial, and it is the one that looks inside a process rather than across a request. Where a trace tells you the Postgres query in the order service took 40 milliseconds, a profile tells you what the order service's CPU was doing during those 40 milliseconds, down to the call stack.
 
 This tutorial's stack ships Grafana Pyroscope as the profiling backend, and every one of the six domain services, across all three language tracks, has been verified to push `process_cpu` flame graphs into it. That verification matters because profiling agents are a different kind of integration than an OTLP exporter: they instrument the runtime itself, not an HTTP client or a database driver, and the failure modes are correspondingly unusual, as the Quarkus LogManager ordering issue below makes concrete.

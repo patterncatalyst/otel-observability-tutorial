@@ -5,6 +5,18 @@ part: "The signals"
 description: "Why auto-instrumentation does not reliably carry W3C trace context across a Kafka hop, and the PROPAGATE_KAFKA_CONTEXT toggle that contrasts a continued trace against a broken one."
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Explain why Kafka's header mechanism does not guarantee trace context crosses a message boundary the way HTTP and gRPC headers do
+- Use the `PROPAGATE_KAFKA_CONTEXT` toggle to compare a continued trace against a broken one
+- Locate the propagation switch in each stack: a Java agent system property in Spring, a per-channel property in Quarkus, an explicit inject/extract module in Python
+- Inspect Kafka message headers directly with `kcat` to confirm whether `traceparent` and `baggage` were written
+- Read a fan-out trace shape where two consumer groups appear as sibling spans off the same producer span
+
+## Why this matters
+
 HTTP and gRPC both have a natural place to put trace context: a header, or a metadata entry, sent with the request and read by the server before the handler runs. Auto-instrumentation libraries for both protocols exploit that place reliably, because the protocol itself guarantees it exists on every call. Kafka has no such guarantee built into the protocol's core contract from the consumer's point of view. A message is a key, a value, and, since Kafka 0.11, an optional list of headers that a well-behaved producer can choose to set and a well-behaved consumer can choose to read, but nothing in the broker enforces that either side does. Left alone, a Kafka consumer's processing has no way to know which trace, if any, produced the message it is handling, and the span it opens becomes a new root with no parent.
 
 This chapter is about the fix: inject the W3C trace context into the message's headers on the producer side, and extract it back into context on the consumer side, so a span opened while processing a Kafka message continues the trace that published it instead of starting a disconnected one. All three stacks in this tutorial implement this, through different mechanisms, and all three expose the same toggle, `PROPAGATE_KAFKA_CONTEXT`, that turns injection off so the broken-trace case can be demonstrated and compared directly against the working one.

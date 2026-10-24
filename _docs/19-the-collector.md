@@ -5,6 +5,18 @@ part: "Making signals useful"
 description: "Collector pipelines as receivers, processors, and exporters, and why cross-cutting decisions like batching, redaction, and routing belong there instead of in application code."
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Describe how receivers, processors, and exporters compose into a Collector pipeline, and why processor order matters
+- Explain what `memory_limiter`, `resource`, and `batch` each protect against, and why those decisions belong in the Collector rather than in every service
+- Use the `debug` exporter and `otelcol-contrib validate` to troubleshoot and verify a Collector configuration before it ships
+- Distinguish the two-tier agent-and-gateway Collector topology from the single-Collector shape this tutorial runs
+- Recognize redaction and routing as Collector-level concerns that should not depend on every service remembering to implement them
+
+## Why this matters
+
 Every service in this tutorial sends its telemetry to the same place first: an OpenTelemetry Collector, not directly to Tempo, Mimir, or Loki. That extra hop is easy to dismiss as plumbing, but it is the point where a set of decisions that have nothing to do with any individual service's business logic get made once, in one configuration file, instead of being re-implemented inside every service that exists today and every service written after this tutorial is finished.
 
 ## Receivers, processors, exporters
