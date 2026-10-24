@@ -5,6 +5,18 @@ part: "The signals"
 description: "Wrapping the inventory and payment retry loops in spans of their own: the attempt count, the failure reason, and the business status auto-instrumentation can't see."
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Wrap a retry loop in a manual span carrying an attempt count, per-attempt events, and a final status the auto-generated gRPC span can't express
+- Obtain a `Tracer` the idiomatic way in each stack: `GlobalOpenTelemetry.getTracer(...)` in Spring Boot, CDI injection in Quarkus, and the `otel.tracer()` helper in Python
+- Enrich the currently active span with `Span.current()`/`trace.get_current_span()` instead of creating a new span for a single fact
+- Decide when a business operation deserves its own child span versus an attribute on the span already running
+- Query Tempo, from Grafana or the command line, for spans matching an attribute like `attempts>1`
+
+## Why this matters
+
 Open the trace from Chapter 8 in Tempo and it already tells a real story: one root span for `POST /orders`, a `CheckStock` child, an `Authorize` child, a database insert, a Kafka publish. What it does not tell you is whether `CheckStock` succeeded on the first attempt or the fourth, or what each of those failed attempts returned before the retry loop gave up and moved on. `OrderController`, `OrderResource`, and `order/main.py` each wrap their gRPC calls in a five-attempt retry loop with a one-second delay between tries, and every one of those attempts happens entirely inside the single gRPC client span the auto-instrumentation already produces, because from the instrumentation's point of view, there is exactly one gRPC call being traced: the last one that actually returned. The four that failed before it leave no trace at all.
 
 That is the gap this chapter closes, and it is a gap by design rather than a defect: auto-instrumentation can only see library boundaries: a servlet dispatch starting, an HTTP client call going out, a JDBC statement executing. It has no way to know that a particular `CheckStock` failure is being retried rather than treated as final, because "this is a retry" is a decision your code makes, not something a REST or gRPC client library exposes as an event the agent, the extension, or the distro launcher can hook. The same is true of anything else that is meaningful to the business but invisible at the wire: a discount rule firing, a cache being checked before a database call, a feature flag changing which code path a request takes. Auto-instrumentation gives you the skeleton every request shares. Manual spans are where you tell it what actually happened inside this particular request.

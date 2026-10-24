@@ -5,6 +5,18 @@ part: "The signals"
 description: "A custom orders_placed_total counter and a fulfillment-duration histogram, two bridge mechanisms getting them from Micrometer to OTLP, and the exemplar that links a histogram bucket straight to its trace."
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Trace the bridge each stack uses to get a Micrometer or OpenTelemetry meter onto the OTLP pipeline: the Java agent's runtime bridge, Quarkus's build-time extension, and Python's direct SDK call
+- Add a histogram (`orders.fulfillment.duration`) alongside an existing counter, and explain why tags should describe a small closed set of states rather than an open-ended identifier
+- Predict how a Micrometer dot-separated metric name gets normalized to Prometheus's underscore-and-unit convention on export
+- Enable trace-based exemplars and use one to jump from a histogram bucket in Grafana straight to the trace that produced it
+- Verify a counter at its source (`/actuator/prometheus`, a Prometheus registry, or a correlated log line) before assuming an empty Mimir panel means the handler never ran
+
+## Why this matters
+
 The order service already emits one real metric: every call to `POST /orders`, on every language, increments `orders_placed_total` with a `status` tag of `PLACED` or `REJECTED`. That line of code is the anchor for this chapter, because it's the one place the three implementations converge in what they write and diverge in what happens to it next. `OrderController.java`, `OrderResource.java`, and `order/main.py` all call something that looks almost identical: `meterRegistry.counter("orders_placed_total", "status", status).increment()` in both Java services, `app.state.orders_counter.add(1, {"status": status})` in Python. What sits behind that call, and what has to happen for the number to reach Mimir with an exemplar attached, is a different pipeline in each case. This chapter follows that pipeline from the counter you already have, through a histogram you don't have yet, out to the dashboard query and the trace it links to.
 
 {% include excalidraw.html file="ch10-metrics-exemplars" alt="Diagram of three metrics sources converging on one OTLP pipeline: Spring Boot's Micrometer MeterRegistry bridged by the OpenTelemetry Java agent, Quarkus's Micrometer MeterRegistry bridged by the quarkus-micrometer-opentelemetry build-time extension, and Python's OpenTelemetry Metrics API used directly through otel.meter(), all producing the same orders_placed_total counter and an orders.fulfillment.duration histogram with exemplars attached, exported over OTLP to Mimir for Prometheus-compatible querying, with a dashed amber arrow showing a histogram bucket's exemplar trace_id linking to a trace in Tempo" caption="Figure 10.1: One counter and one histogram, two bridge mechanisms, one exemplar link to Tempo" %}

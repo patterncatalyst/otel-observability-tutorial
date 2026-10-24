@@ -5,6 +5,18 @@ part: "Foundations"
 description: "Loki, Grafana, Tempo, and Mimir, plus Pyroscope and the embedded OTel Collector: what each store holds, the all-in-one image, and the ports every later chapter uses."
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Identify which of Tempo, Mimir, Loki, and Pyroscope holds which signal, and why each store's data model fits that signal
+- Explain how the `grafana/otel-lgtm` all-in-one image bundles four backends and an embedded Collector into a single container
+- Describe how `stack/grafana/datasources.yaml` wires the trace-to-logs, trace-to-metrics, and trace-to-profiles correlation links
+- Walk a single investigation across all four stores using nothing but a shared trace ID
+- Locate the ports this tutorial reuses for Grafana, the Collector, Tempo, Loki, Mimir, and Pyroscope
+
+## Why this matters
+
 The backend this tutorial runs against is four storage engines and one UI, shipped as a single container image, with a fifth storage engine for profiles running alongside it. None of the five is interchangeable with another; each one is built around a different shape of data, and knowing which store holds which signal makes every later chapter's configuration (ports, datasource wiring, what a Grafana panel is querying) legible instead of memorized.
 
 ## Four stores, four shapes of data

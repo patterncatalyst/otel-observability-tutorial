@@ -5,6 +5,18 @@ part: "Foundations"
 description: "API versus SDK versus instrumentation, Resource and Context and Propagation, and the Collector's role between a process and its backend."
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Distinguish the OpenTelemetry API from the SDK, and explain why a library can instrument itself against the API without imposing a backend on its consumers
+- Explain what a Resource attribute is and why `service.name` has to be set correctly for cross-service correlation to work
+- Explain how Context carries state within a process and how Propagation carries it across a process boundary using W3C Trace Context headers
+- Describe what the Collector does between an instrumented service and a backend, and why routing through it decouples where telemetry is produced from where it's stored
+- Trace a single span from creation through the API, the SDK, propagation, and the Collector to its backend
+
+## Why this matters
+
 OpenTelemetry is not one piece of software. It's a specification plus a layered set of components that implement it, and the layering is the part worth understanding before any instrumentation chapter asks you to add a dependency and call a method. Four terms do most of the work: API, SDK, Resource, and Collector. Get the relationship between them straight once, and every later chapter's configuration (which dependency to add, why a span shows up with no attributes until a processor is registered, why disabling the SDK doesn't mean removing instrumented code) stops being arbitrary and starts being a direct consequence of this layering.
 
 ## API versus SDK: the interface and the implementation

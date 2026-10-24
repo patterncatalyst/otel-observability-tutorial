@@ -5,6 +5,18 @@ part: "Production concerns"
 description: "Rollout patterns, per-environment resource attributes, keeping secrets and PII out of telemetry, and the path from this local stack to a managed backend."
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Set `deployment.environment.name` and related resource attributes to separate environments and versions in telemetry
+- Apply canary, blue-green, and feature-flag rollout patterns using golden-signal metrics filtered by version and environment
+- Treat Collector configuration and alerting rules as version-controlled, reviewed deployable artifacts
+- Identify and redact secrets and PII from spans, logs, and metrics at both the instrumentation layer and the Collector layer
+- Harden the telemetry pipeline with TLS, an authenticated OTLP receiver, and Grafana RBAC, and plan the migration from the local LGTM stack to a managed backend or OpenShift
+
+## Why this matters
+
 Everything built across this tutorial runs against a local Grafana LGTM
 stack: Loki, Grafana, Tempo, and Mimir, running in containers, fed by an
 OpenTelemetry Collector on the same machine as the demo services. That

@@ -5,6 +5,18 @@ part: "The signals"
 description: "Resource attributes, HTTP/DB/messaging conventions, and why consistent naming is what makes traces, metrics, logs, and profiles correlate at all."
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Explain why consistent attribute names, not just shared concepts, are what make cross-service telemetry correlate at all
+- Identify the three resource attributes (`service.name`, `service.version`, `deployment.environment`) every signal in this tutorial carries
+- Apply the HTTP, database, RPC, and messaging semantic conventions this tutorial's six services use
+- Namespace custom, domain-specific attributes to avoid colliding with the standard OpenTelemetry vocabulary
+- Recognize why an attribute rename, such as `http.method` becoming `http.request.method`, matters for a long-lived telemetry pipeline
+
+## Why this matters
+
 Every chapter up to this point has produced spans, metrics, log lines, or profiling samples and trusted that they would line up correctly in Grafana: a trace for an order showing up next to the right logs, a metric labeled with the right service name, a profile attributable to the right process. None of that correlation happens automatically because the signals are "related" in some abstract sense. It happens because every signal in this tutorial, regardless of which language emitted it, uses the same attribute names and the same attribute values for the same concepts. That shared vocabulary is what OpenTelemetry calls semantic conventions: a specification for what they are, where they come from, and why skipping them quietly breaks everything every later chapter depends on.
 
 OpenTelemetry's own documentation on the topic is the canonical reference and worth reading directly: [opentelemetry.io/docs/concepts/semantic-conventions](https://opentelemetry.io/docs/concepts/semantic-conventions/). What follows is the subset that matters for the services in this tutorial, and why the convention, not the specific names chosen, is what deserves attention.

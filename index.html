@@ -24,9 +24,9 @@ title: Home
   <div class="container">
     <div class="stats">
       <div class="stat"><span class="stat__value">🔭</span><span class="stat__label">One trace across every signal: traces, metrics, logs, baggage, and profiles</span></div>
-      <div class="stat"><span class="stat__value">🧩</span><span class="stat__label">The same e-commerce demo built three ways — Spring Boot, Quarkus, and Python</span></div>
+      <div class="stat"><span class="stat__value">🧩</span><span class="stat__label">The same e-commerce demo built three ways: Spring Boot, Quarkus, and Python</span></div>
       <div class="stat"><span class="stat__value">📊</span><span class="stat__label">Correlated in Grafana via OpenTelemetry (Tempo + Mimir + Loki)</span></div>
-      <div class="stat"><span class="stat__value">🐳</span><span class="stat__label">The full Grafana LGTM stack, running locally — no managed cloud required</span></div>
+      <div class="stat"><span class="stat__value">🐳</span><span class="stat__label">The full Grafana LGTM stack, running locally, no managed cloud required</span></div>
     </div>
   </div>
 </section>
@@ -38,9 +38,9 @@ title: Home
       If you have run a distributed system, you know the failure mode: a request
       crosses half a dozen services, and when it is slow or quietly wrong, the
       logs you have are too sparse to explain it, too noisy to search, or costly
-      enough that you hesitate to add more. The thing that would actually help —
-      the request's full path, in order, across every service, with the time spent
-      in each hop and the cost of serializing data between them — is the thing you
+      enough that you hesitate to add more. The thing that would help,
+      the request's full path in order across every service, with the time spent
+      in each hop and the cost of serializing data between them, is the thing you
       almost never have.
     </p>
     <p class="section-sub">
@@ -48,12 +48,12 @@ title: Home
       domain is instrumented with <a href="https://opentelemetry.io/">OpenTelemetry</a>
       on <strong>Spring Boot</strong>, <strong>Quarkus</strong>, and
       <strong>Python</strong>, chapter by chapter, until a single request is a
-      trace you can read end to end — with metrics that show it in aggregate
+      trace you can read end to end, with metrics that show it in aggregate
       and logs that correlate back to the same trace, all in a Grafana stack
       you run yourself. Every chapter shows the same concept across all three
       stacks side by side, so you can see what each runtime's instrumentation
-      actually buys you, and what it costs. It stays honest about the
-      trade-offs throughout: what auto-instrumentation gives you for free,
+      buys you, and what it costs. It is clear about the
+      trade-offs throughout: what auto-instrumentation handles for you,
       where you pay for it in overhead or noise, and when one hand-placed span
       is worth more than a dozen automatic ones.
     </p>

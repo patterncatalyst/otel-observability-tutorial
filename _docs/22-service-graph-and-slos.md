@@ -5,6 +5,18 @@ part: "Production concerns"
 description: "How a service graph is derived from spans, how span metrics and the four golden signals feed SLOs, and how to alert on them."
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Explain how Tempo's service graph is derived from the parent-child relationships already recorded between spans
+- Generate span metrics (request rate, duration, and error counters) with the `spanmetrics` connector, without adding new instrumentation
+- Apply the four golden signals (latency, traffic, errors, saturation) to span-derived metrics
+- Define an SLI, SLO, and error budget from span metrics, and alert on burn rate instead of a bare threshold
+- Query service graph and span metrics data with PromQL, and provision Grafana alerting rules as version-controlled YAML
+
+## Why this matters
+
 Every trace captured by the services in this tutorial already contains the
 answer to a question operators ask constantly: which services call which
 other services, how often, how fast, and how reliably? That information is
