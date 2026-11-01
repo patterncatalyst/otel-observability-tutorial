@@ -5,6 +5,18 @@ part: "Making signals useful"
 description: "Head sampling versus tail sampling, the tail-sampling Collector config, and what each approach costs you in traces you never see."
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Contrast head sampling's trace-ID coin flip against tail sampling's buffer-then-decide approach, and what each costs
+- Configure `parentbased_traceidratio` head sampling from SDK environment variables alone, with no code change
+- Read and order a `tail_sampling` processor's policies, errors, latency, critical routes, and a probabilistic baseline, so the right trace wins
+- Size `decision_wait`, `num_traces`, and `memory_limiter` for a tail-sampling Collector configuration
+- Verify tail-sampling policies are working using the Collector's own internal metrics rather than a service's logs or dashboards
+
+## Why this matters
+
 Every trace this tutorial has generated so far has been kept, in full, by every backend. That is fine at demo scale, a handful of services handling test traffic, but it does not survive contact with production volume. A service handling a few hundred requests per second generates tens of millions of spans a day; a fleet of services generates billions. Storing every one of them, indexed, forever, costs real money, and most of those traces look exactly like the last one: a successful request, fast, unremarkable. Sampling is the decision about which traces are worth keeping, and where in the pipeline that decision gets made changes what you are able to keep.
 
 ## Head sampling: deciding at the start
@@ -99,6 +111,6 @@ A nonzero and climbing value here, specifically for the `dropped_too_early` reas
 
 Head and tail sampling are not mutually exclusive, and a mature setup often runs both: head sampling at a moderate rate to control the volume of ordinary traffic reaching the Collector in the first place, and tail sampling on top of that reduced volume to make sure that whatever head sampling did let through gets filtered intelligently rather than uniformly. The core trade-off to carry forward from this chapter: head sampling is cheap and blind, deciding before a trace's outcome is known, which means its losses are random and proportional to its rate; tail sampling is informed but costly in memory and buffering time, deciding after a trace's outcome is fully known, which means its losses, the `probabilistic-baseline` traces it discards, are a deliberate choice rather than a blind one. Neither is wrong. The right choice depends on whether the traffic volume a service generates can be reduced safely at the source, or whether the interesting cases are rare enough, and important enough, that paying the memory cost of inspecting every single trace before deciding is worth it.
 
-{% include excalidraw.html file="ch20-sampling" alt="Diagram contrasting head sampling, a per-service SDK decision made at span start with a fixed keep rate, against tail sampling, a Collector processor that buffers full traces and applies ordered policies for errors, latency, critical routes, and a probabilistic baseline" caption="Figure 20.1 — Head sampling (per-service) vs. tail sampling (post-hoc, at the Collector)" %}
+{% include excalidraw.html file="ch20-sampling" alt="Diagram contrasting head sampling, a per-service SDK decision made at span start with a fixed keep rate, against tail sampling, a Collector processor that buffers full traces and applies ordered policies for errors, latency, critical routes, and a probabilistic baseline" caption="Figure 20.1: Head sampling (per-service) vs. tail sampling (post-hoc, at the Collector)" %}
 
 Further reading: the [OpenTelemetry documentation](https://opentelemetry.io/docs/) covers the sampling model in its [trace sampling](https://opentelemetry.io/docs/concepts/sampling/) concepts page, and the Collector-contrib [`tail_sampling` processor reference](https://opentelemetry.io/docs/collector/) documents the full set of policy types beyond the four used in this chapter's configuration.

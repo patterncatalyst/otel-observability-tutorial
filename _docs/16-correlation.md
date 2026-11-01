@@ -5,13 +5,25 @@ part: "Making signals useful"
 description: "Linking traces, logs, metrics, and profiles in Grafana through a shared trace_id and the datasource provisioning that wires it together."
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Trace how a shared `trace_id` links a span in Tempo to its logs in Loki, its metric exemplar in Mimir, and its CPU profile in Pyroscope
+- Configure the Grafana datasource provisioning (`tracesToLogsV2`, derived fields, `tracesToMetrics`, exemplars, `tracesToProfiles`) that wires those links together
+- Explain why exemplars, not per-request labels, are what let a metric spike link back to one concrete trace without inflating cardinality
+- Call Loki, Prometheus, and Tempo's HTTP APIs directly to verify a correlation link is actually broken, bypassing Grafana's UI
+- Diagnose a broken correlation link by checking for a dropped trace context or a mismatched attribute name between signals
+
+## Why this matters
+
 A single slow checkout request produces four separate records: a trace in Tempo, log lines in Loki, a histogram observation in Mimir, and a CPU profile in Pyroscope. Each one answers a different question. The trace shows which service ate the latency. The logs show what that service was doing at the moment it stalled. The metric shows whether this was a one-off or the start of a trend. The profile shows which function was actually burning CPU. Taken separately, these four views are four separate investigations, each starting from a blank query box. Taken together, tied by one identifier, they become a single investigation with four tabs.
 
 That identifier is `trace_id`. The OpenTelemetry SDK generates one when a trace starts and propagates it through context to every span, every log record emitted inside that context, and every metric exemplar recorded while a trace is active. Correlation in Grafana is the practice of teaching each datasource where to find that identifier in the others, so a click in one view opens the matching view with the right query already filled in. None of this requires application code. It is entirely provisioning: a block of YAML, read once at startup, that tells Grafana how the datasources relate to each other.
 
 ## Where the links live
 
-The stack in this tutorial provisions its datasources from `stack/grafana/datasources.yaml`, mounted into the Grafana container's provisioning directory. That file defines four datasources — Tempo, Loki, Prometheus, and Pyroscope — and each one carries a block of `jsonData` describing how to jump to the others. Nothing about the application services needs to know this file exists. The links appear in the Grafana UI the moment the container starts, because Grafana reads its provisioning directory on boot and wires the datasources accordingly.
+The stack in this tutorial provisions its datasources from `stack/grafana/datasources.yaml`, mounted into the Grafana container's provisioning directory. That file defines four datasources (Tempo, Loki, Prometheus, and Pyroscope) and each one carries a block of `jsonData` describing how to jump to the others. Nothing about the application services needs to know this file exists. The links appear in the Grafana UI the moment the container starts, because Grafana reads its provisioning directory on boot and wires the datasources accordingly.
 
 This matters for the same reason the Collector chapter argues that cross-cutting decisions belong outside application code: four backend teams write and redeploy independently of the person who decides how their signals should cross-reference each other. Put the decision in the Collector and the datasource provisioning rather than in each service, and it changes in one place.
 
@@ -140,6 +152,6 @@ Every one of these links depends on the same precondition: a trace context that 
 
 None of the correlation configuration in this chapter runs any code. It is declarative, provisioned once, and applies to every service that follows the shared conventions, which is exactly why it belongs in the datasource layer rather than scattered across application repositories: one file, reviewed once, grants a cross-signal investigation to every engineer who opens Grafana afterward.
 
-{% include excalidraw.html file="ch16-correlation" alt="Diagram of a single trace_id connecting Tempo, Loki, Mimir, and Pyroscope datasources into one Grafana pane via tracesToLogsV2, derived fields, exemplars, and tracesToProfiles" caption="Figure 16.1 — One trace_id, four signals, one Grafana pane" %}
+{% include excalidraw.html file="ch16-correlation" alt="Diagram of a single trace_id connecting Tempo, Loki, Mimir, and Pyroscope datasources into one Grafana pane via tracesToLogsV2, derived fields, exemplars, and tracesToProfiles" caption="Figure 16.1: One trace_id, four signals, one Grafana pane" %}
 
 Further reading: the [OpenTelemetry documentation](https://opentelemetry.io/docs/) covers context propagation and the trace/log correlation model that this provisioning depends on, in the sections on [traces](https://opentelemetry.io/docs/concepts/signals/traces/) and [context propagation](https://opentelemetry.io/docs/concepts/context-propagation/).

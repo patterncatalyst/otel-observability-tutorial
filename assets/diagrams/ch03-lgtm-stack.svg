@@ -8,19 +8,19 @@
 <text x="170.0" y="127.5" font-size="11.5" fill="#555555" text-anchor="middle">OTLP HTTP :4318</text>
 <rect x="60" y="170" width="150" height="60" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
 <text x="135.0" y="198.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Tempo</text>
-<text x="135.0" y="215.0" font-size="11.5" fill="#555555" text-anchor="middle">traces — :3200</text>
+<text x="135.0" y="215.0" font-size="11.5" fill="#555555" text-anchor="middle">traces: 3200</text>
 <rect x="225" y="170" width="150" height="60" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
 <text x="300.0" y="198.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Mimir</text>
-<text x="300.0" y="215.0" font-size="11.5" fill="#555555" text-anchor="middle">metrics — :9090</text>
+<text x="300.0" y="215.0" font-size="11.5" fill="#555555" text-anchor="middle">metrics: 9090</text>
 <rect x="390" y="170" width="140" height="60" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
 <text x="460.0" y="198.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Loki</text>
-<text x="460.0" y="215.0" font-size="11.5" fill="#555555" text-anchor="middle">logs — :3100</text>
+<text x="460.0" y="215.0" font-size="11.5" fill="#555555" text-anchor="middle">logs: 3100</text>
 <rect x="60" y="260" width="470" height="60" rx="9" fill="#fdecec" stroke="#ee0000" stroke-width="2"/>
-<text x="295.0" y="288.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Grafana UI — :3000</text>
+<text x="295.0" y="288.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Grafana UI: 3000</text>
 <text x="295.0" y="305.0" font-size="11.5" fill="#555555" text-anchor="middle">dashboards + correlated views</text>
 <rect x="610" y="70" width="220" height="70" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
 <text x="720.0" y="95.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Pyroscope</text>
-<text x="720.0" y="112.5" font-size="11.5" fill="#555555" text-anchor="middle">profiles — :4040</text>
+<text x="720.0" y="112.5" font-size="11.5" fill="#555555" text-anchor="middle">profiles: 4040</text>
 <text x="720.0" y="127.5" font-size="11.5" fill="#555555" text-anchor="middle">separate container</text>
 <rect x="610" y="170" width="220" height="60" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
 <text x="720.0" y="198.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Kafka (KRaft)</text>
@@ -40,5 +40,5 @@
 <path d="M720,230 L720,260" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <text x="726.0" y="239.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">inspect / produce</text>
 <text x="726.0" y="239.0" font-size="11" fill="#555" text-anchor="middle">inspect / produce</text>
-<text x="430" y="16" font-size="11" fill="#b8650a" text-anchor="middle" font-weight="700">Grafana is the only GUI — Kafka is inspected with the kcat CLI</text>
+<text x="430" y="16" font-size="11" fill="#b8650a" text-anchor="middle" font-weight="700">Grafana is the only GUI: Kafka is inspected with the kcat CLI</text>
 </svg>
