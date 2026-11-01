@@ -91,6 +91,7 @@ exclude:
   - scripts/
   - .devcontainer/
   - demos/
+  - tools/
   - deck/
   - presentations/
   - openshift/
