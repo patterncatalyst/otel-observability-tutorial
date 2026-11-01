@@ -1,0 +1,73 @@
+{
+  "info": {
+    "name": "OTel Observability Tutorial (Python track)",
+    "description": "Exercises the external edges of the Python track services: the order REST API (:8080) and the review GraphQL API (:8081). Each request is auto-traced; open Grafana > Explore > Tempo (http://localhost:3000) to follow the trace it produces. Bring the stack up first: docker compose -f stack/compose.yaml --profile python up -d --build.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "orderUrl", "value": "http://localhost:8080" },
+    { "key": "reviewUrl", "value": "http://localhost:8081" },
+    { "key": "orderId", "value": "" },
+    { "key": "sku", "value": "WIDGET-001" }
+  ],
+  "item": [
+    {
+      "name": "Place order (REST)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const body = pm.response.json();",
+              "if (body.orderId) { pm.collectionVariables.set('orderId', body.orderId); }",
+              "pm.test('placed', () => pm.expect(body.status).to.eql('PLACED'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{orderUrl}}/orders", "host": ["{{orderUrl}}"], "path": ["orders"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"customer_id\": \"cust-42\",\n  \"sku\": \"WIDGET-001\",\n  \"quantity\": 1\n}"
+        }
+      }
+    },
+    {
+      "name": "Place order — payment declined (REST)",
+      "description": "quantity high enough to push the amount over the payment ceiling ($1,000,000 at 2500 cents/unit => > 40000 units), so payment declines and the order is written with status REJECTED — an error path to look at in the trace.",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{orderUrl}}/orders", "host": ["{{orderUrl}}"], "path": ["orders"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"customer_id\": \"cust-42\",\n  \"sku\": \"WIDGET-001\",\n  \"quantity\": 50000\n}"
+        }
+      }
+    },
+    {
+      "name": "Get order (REST)",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{orderUrl}}/orders/{{orderId}}", "host": ["{{orderUrl}}"], "path": ["orders", "{{orderId}}"] }
+      }
+    },
+    {
+      "name": "Reviews by SKU (GraphQL)",
+      "description": "The review service keys reviews by SKU (Query.reviews(sku:)), not by order id. Each resolver opens its own span, so this single POST shows up as a resolver tree in Tempo.",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{reviewUrl}}/graphql", "host": ["{{reviewUrl}}"], "path": ["graphql"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"query\": \"{ reviews(sku: \\\"{{sku}}\\\") { id sku rating body } }\"\n}"
+        }
+      }
+    }
+  ]
+}
